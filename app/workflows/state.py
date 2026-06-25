@@ -43,6 +43,13 @@ class RevenuePilotState(TypedDict, total=False):
     skill_outputs: dict[str, dict[str, Any]]
 
 
+class WorkflowStepError(RuntimeError):
+    def __init__(self, skill_name: str, error: str) -> None:
+        super().__init__(f"{skill_name} failed: {error}")
+        self.skill_name = skill_name
+        self.error = error
+
+
 def append_step_result(
     state: RevenuePilotState,
     *,
@@ -51,8 +58,10 @@ def append_step_result(
 ) -> RevenuePilotState:
     state.setdefault("skill_run_ids", []).append(runner_result["skill_run_id"])
     state.setdefault("created_entities", []).extend(runner_result.get("created_entities", []))
-    state.setdefault("skill_outputs", {})[skill_name] = runner_result.get("output", {})
     state.setdefault("warnings", []).extend(runner_result.get("output", {}).get("warnings", []))
     if runner_result.get("status") == "failed":
-        state.setdefault("errors", []).append(runner_result.get("error", f"{skill_name} failed"))
+        error = runner_result.get("error", f"{skill_name} failed")
+        state.setdefault("errors", []).append(error)
+        raise WorkflowStepError(skill_name, error)
+    state.setdefault("skill_outputs", {})[skill_name] = runner_result.get("output", {})
     return state

@@ -22,6 +22,8 @@ class SkillRunRecord:
     output_payload: dict[str, Any] = field(default_factory=dict)
     error_message: str | None = None
     id: UUID = field(default_factory=uuid4)
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
     created_at: datetime = field(default_factory=utcnow)
     updated_at: datetime = field(default_factory=utcnow)
 

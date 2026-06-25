@@ -29,6 +29,7 @@ class InMemorySkillRunRepository:
             related_entity_type=related_entity_type,
             related_entity_id=related_entity_id,
             status=status,
+            started_at=utcnow(),
         )
         self.records[record.id] = record
         return record
@@ -38,6 +39,7 @@ class InMemorySkillRunRepository:
         record.status = "succeeded"
         record.output_payload = output_payload
         record.updated_at = utcnow()
+        record.finished_at = record.updated_at
         return record
 
     async def mark_failed(self, *, skill_run_id: UUID, user_id: str, error_message: str) -> SkillRunRecord:
@@ -45,6 +47,7 @@ class InMemorySkillRunRepository:
         record.status = "failed"
         record.error_message = error_message
         record.updated_at = utcnow()
+        record.finished_at = record.updated_at
         return record
 
     async def get_for_user(self, skill_run_id: UUID, user_id: str) -> SkillRunRecord:

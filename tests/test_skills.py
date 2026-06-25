@@ -3,8 +3,10 @@ from __future__ import annotations
 import asyncio
 
 from app.repositories.ai_generation_repo import ai_generation_repo
+from app.repositories.factory import get_repositories, reset_repository_bundle
 from app.repositories.skill_run_repo import skill_run_repo
 from app.services.skill_runner import skill_runner
+from app.ai.provider import reset_ai_provider, set_ai_provider
 from app.skills.registry import SKILL_REGISTRY
 from app.skills.schemas import RESULT_MODELS, SkillEnvelope
 
@@ -81,6 +83,28 @@ def test_sales_outreach_guardrail_blocks_spam_like_request():
     assert any("Human approval" in warning for warning in output["warnings"])
 
 
+def test_sales_outreach_guardrail_runs_before_provider_call():
+    class FailingProvider:
+        async def generate_json(self, **_kwargs):
+            raise AssertionError("provider should not be called for spam-like outreach")
+
+    set_ai_provider(FailingProvider())
+    try:
+        result = arun(
+            skill_runner.run(
+                user_id="user-1",
+                skill_name="sales_outreach",
+                input_payload={
+                    "instructions": "bulk send scraped prospects with fake testimonial",
+                },
+            )
+        )
+    finally:
+        reset_ai_provider()
+
+    assert result["status"] == "blocked"
+
+
 def test_revenue_guardrail_keeps_advice_operational():
     result = arun(
         skill_runner.run(
@@ -92,3 +116,11 @@ def test_revenue_guardrail_keeps_advice_operational():
 
     assert result["status"] == "succeeded"
     assert any("not tax, legal, accounting, or investment advice" in warning for warning in result["output"]["warnings"])
+    assert any("Regulated advice request detected" in warning for warning in result["output"]["warnings"])
+
+
+def test_repository_factory_defaults_to_memory():
+    reset_repository_bundle()
+    repositories = get_repositories()
+    assert repositories.skill_runs is skill_run_repo
+    assert repositories.ai_generations is ai_generation_repo

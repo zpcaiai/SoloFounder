@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from app.repositories.ai_generation_repo import ai_generation_repo
-from app.repositories.skill_run_repo import skill_run_repo
+from app.repositories.factory import get_repositories
 from app.services.entity_creation_service import create_entities_from_skill_output
 from app.skills.registry import get_skill
 
@@ -19,7 +18,8 @@ class SkillRunner:
         related_entity_type: str | None = None,
         related_entity_id: str | None = None,
     ) -> dict[str, Any]:
-        skill_run = await skill_run_repo.create(
+        repositories = get_repositories()
+        skill_run = await repositories.skill_runs.create(
             user_id=user_id,
             project_id=project_id,
             skill_name=skill_name,
@@ -42,13 +42,13 @@ class SkillRunner:
                 }
             )
 
-            await skill_run_repo.mark_succeeded(
+            await repositories.skill_runs.mark_succeeded(
                 skill_run_id=skill_run.id,
                 user_id=user_id,
                 output_payload=output,
             )
 
-            await ai_generation_repo.create(
+            await repositories.ai_generations.create(
                 user_id=user_id,
                 project_id=project_id,
                 skill_run_id=skill_run.id,
@@ -73,7 +73,7 @@ class SkillRunner:
             }
 
         except Exception as exc:
-            await skill_run_repo.mark_failed(
+            await repositories.skill_runs.mark_failed(
                 skill_run_id=skill_run.id,
                 user_id=user_id,
                 error_message=str(exc),

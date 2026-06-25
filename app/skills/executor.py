@@ -6,6 +6,7 @@ from typing import Any
 from pydantic import BaseModel, ValidationError
 
 from app.ai.provider import get_ai_provider
+from app.skills.guardrails import is_regulated_revenue_request, is_spam_like_outreach, safe_outreach_result
 from app.skills.prompts import build_skill_prompt
 from app.skills.schemas import RESULT_MODELS, SkillEnvelope
 
@@ -103,6 +104,27 @@ async def run_skill(skill_name: str, envelope: dict[str, Any]) -> dict[str, Any]
 
     input_payload = envelope.get("input_payload", envelope)
     output_schema = result_model.model_json_schema()
+
+    if skill_name == "sales_outreach" and is_spam_like_outreach(input_payload):
+        result = result_model.model_validate(safe_outreach_result())
+        result_dict = _model_dump(result)
+        envelope_model = SkillEnvelope(
+            skill_name=skill_name,
+            skill_version=str(envelope.get("skill_version", "v1")),
+            status="blocked",
+            summary="Spam-like outreach request blocked",
+            result=result_dict,
+            recommended_next_actions=[
+                "Use a low-volume personalized outreach plan",
+                "Review every outbound message before sending",
+            ],
+            entities_to_create=_entities_to_create(skill_name, result_dict),
+            entities_to_update=[],
+            warnings=_warnings(skill_name, result_dict),
+            confidence_score=95,
+        )
+        return _model_dump(envelope_model)
+
     provider = get_ai_provider()
 
     last_error: Exception | None = None
@@ -121,6 +143,9 @@ async def run_skill(skill_name: str, envelope: dict[str, Any]) -> dict[str, Any]
             result = result_model.model_validate(result_data)
             result_dict = _model_dump(result)
             status = "blocked" if result_dict.get("warning") else "succeeded"
+            warnings = _warnings(skill_name, result_dict)
+            if skill_name == "revenue_retention" and is_regulated_revenue_request(input_payload):
+                warnings.append("Regulated advice request detected; output is limited to operational business analysis.")
             envelope_model = SkillEnvelope(
                 skill_name=skill_name,
                 skill_version=str(envelope.get("skill_version", "v1")),
@@ -130,7 +155,7 @@ async def run_skill(skill_name: str, envelope: dict[str, Any]) -> dict[str, Any]
                 recommended_next_actions=_recommended_next_actions(skill_name, result_dict),
                 entities_to_create=_entities_to_create(skill_name, result_dict),
                 entities_to_update=[],
-                warnings=_warnings(skill_name, result_dict),
+                warnings=warnings,
                 confidence_score=80 if status == "succeeded" else 60,
             )
             return _model_dump(envelope_model)

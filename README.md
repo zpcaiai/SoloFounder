@@ -52,6 +52,18 @@ Set this GitHub repository secret before pushing:
 NEON_DATABASE_URL=postgresql://user:password@host/database?sslmode=require
 ```
 
+For the deployed Vercel app, set:
+
+```text
+REVENUEPILOT_ENV=production
+REVENUEPILOT_DB=postgres
+DATABASE_URL=postgresql://user:password@host/database?sslmode=require
+REVENUEPILOT_API_KEY=<optional shared API key>
+```
+
+When `REVENUEPILOT_ENV=production`, protected API routes require `X-User-Id`.
+When `REVENUEPILOT_API_KEY` is set, protected API routes also require `X-API-Key`.
+
 The first migration is:
 
 ```text

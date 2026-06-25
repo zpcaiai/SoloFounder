@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
+from app.api.dependencies import current_user_id
 from app.services.skill_runner import skill_runner
 
 router = APIRouter(prefix="/api/skills", tags=["skills"])
@@ -19,9 +20,9 @@ class SkillRunRequest(BaseModel):
 
 
 @router.post("/run")
-async def run_skill(request: SkillRunRequest, x_user_id: str = Header(default="demo-user")) -> dict[str, Any]:
+async def run_skill(request: SkillRunRequest, user_id: str = Depends(current_user_id)) -> dict[str, Any]:
     return await skill_runner.run(
-        user_id=x_user_id,
+        user_id=user_id,
         project_id=request.project_id,
         skill_name=request.skill_name,
         input_payload=request.input_payload,

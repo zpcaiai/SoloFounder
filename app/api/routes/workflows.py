@@ -5,10 +5,11 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from app.repositories.workflow_run_repo import workflow_run_repo
+from app.api.dependencies import current_user_id
+from app.repositories.factory import get_repositories
 from app.services.workflow_runner import workflow_runner
 
 router = APIRouter(prefix="/api", tags=["workflows"])
@@ -48,9 +49,9 @@ def _payload(request: WorkflowRunRequest) -> dict[str, Any]:
 
 
 @router.post("/workflows/idea-to-offer/run")
-async def run_idea_to_offer(request: WorkflowRunRequest, x_user_id: str = Header(default="demo-user")) -> dict[str, Any]:
+async def run_idea_to_offer(request: WorkflowRunRequest, user_id: str = Depends(current_user_id)) -> dict[str, Any]:
     return await workflow_runner.run(
-        user_id=x_user_id,
+        user_id=user_id,
         workflow_name="idea_to_offer",
         input_payload=_payload(request),
         project_id=request.project_id,
@@ -58,9 +59,9 @@ async def run_idea_to_offer(request: WorkflowRunRequest, x_user_id: str = Header
 
 
 @router.post("/workflows/deal-to-delivery/run")
-async def run_deal_to_delivery(request: WorkflowRunRequest, x_user_id: str = Header(default="demo-user")) -> dict[str, Any]:
+async def run_deal_to_delivery(request: WorkflowRunRequest, user_id: str = Depends(current_user_id)) -> dict[str, Any]:
     return await workflow_runner.run(
-        user_id=x_user_id,
+        user_id=user_id,
         workflow_name="deal_to_delivery",
         input_payload=_payload(request),
         project_id=request.project_id,
@@ -68,9 +69,9 @@ async def run_deal_to_delivery(request: WorkflowRunRequest, x_user_id: str = Hea
 
 
 @router.post("/workflows/content-to-product/run")
-async def run_content_to_product(request: WorkflowRunRequest, x_user_id: str = Header(default="demo-user")) -> dict[str, Any]:
+async def run_content_to_product(request: WorkflowRunRequest, user_id: str = Depends(current_user_id)) -> dict[str, Any]:
     return await workflow_runner.run(
-        user_id=x_user_id,
+        user_id=user_id,
         workflow_name="content_to_product",
         input_payload=_payload(request),
         project_id=request.project_id,
@@ -78,15 +79,15 @@ async def run_content_to_product(request: WorkflowRunRequest, x_user_id: str = H
 
 
 @router.get("/workflow-runs")
-async def list_workflow_runs(x_user_id: str = Header(default="demo-user")) -> list[dict[str, Any]]:
-    records = await workflow_run_repo.list_for_user(x_user_id)
+async def list_workflow_runs(user_id: str = Depends(current_user_id)) -> list[dict[str, Any]]:
+    records = await get_repositories().workflow_runs.list_for_user(user_id)
     return [_serialize(record) for record in records]
 
 
 @router.get("/workflow-runs/{workflow_run_id}")
-async def get_workflow_run(workflow_run_id: str, x_user_id: str = Header(default="demo-user")) -> dict[str, Any]:
+async def get_workflow_run(workflow_run_id: str, user_id: str = Depends(current_user_id)) -> dict[str, Any]:
     try:
-        record = await workflow_run_repo.get_for_user(UUID(workflow_run_id), x_user_id)
+        record = await get_repositories().workflow_runs.get_for_user(UUID(workflow_run_id), user_id)
     except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Workflow run not found") from None
     except PermissionError:

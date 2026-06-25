@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from app.repositories.workflow_run_repo import workflow_run_repo
+from app.repositories.factory import get_repositories
 from app.workflows.content_to_product import build_content_to_product_graph
 from app.workflows.deal_to_delivery import build_deal_to_delivery_graph
 from app.workflows.idea_to_offer import build_idea_to_offer_graph
@@ -28,7 +28,8 @@ class WorkflowRunner:
         input_payload: dict[str, Any],
         project_id: str | None = None,
     ) -> dict[str, Any]:
-        workflow_run = await workflow_run_repo.create(
+        repositories = get_repositories()
+        workflow_run = await repositories.workflow_runs.create(
             user_id=user_id,
             workflow_name=workflow_name,
             input_payload=input_payload,
@@ -44,7 +45,7 @@ class WorkflowRunner:
                 **input_payload,
             }
             final_state = await graph.ainvoke(initial_state)
-            await workflow_run_repo.mark_succeeded(
+            await repositories.workflow_runs.mark_succeeded(
                 workflow_run_id=workflow_run.id,
                 user_id=user_id,
                 output_payload=final_state,
@@ -62,7 +63,7 @@ class WorkflowRunner:
                 "created_entities": final_state.get("created_entities", []),
             }
         except Exception as exc:
-            await workflow_run_repo.mark_failed(
+            await repositories.workflow_runs.mark_failed(
                 workflow_run_id=workflow_run.id,
                 user_id=user_id,
                 error_message=str(exc),

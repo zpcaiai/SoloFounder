@@ -4,6 +4,8 @@ version = "0.1.0"
 description = "RevenuePilot OS Batch 3 AI workflow engine for solo founders."
 requires-python = ">=3.12"
 dependencies = [
+    "anthropic>=0.40",
+    "asyncpg>=0.29",
     "fastapi>=0.110",
     "langgraph>=0.2",
     "pydantic>=2",

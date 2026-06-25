@@ -4,6 +4,7 @@ import asyncio
 
 import pytest
 
+from app.ai.provider import reset_ai_provider, set_ai_provider
 from app.repositories.workflow_run_repo import workflow_run_repo
 from app.services.workflow_runner import workflow_runner
 
@@ -93,3 +94,24 @@ def test_workflow_run_lifecycle_and_user_isolation():
     workflow_run_id = next(iter(workflow_run_repo.records))
     with pytest.raises(PermissionError):
         arun(workflow_run_repo.get_for_user(workflow_run_id, "user-b"))
+
+
+def test_workflow_marks_failed_when_step_fails():
+    class FailingProvider:
+        async def generate_json(self, **_kwargs):
+            raise RuntimeError("model unavailable")
+
+    set_ai_provider(FailingProvider())
+    try:
+        result = arun(
+            workflow_runner.run(
+                user_id="user-1",
+                workflow_name="idea_to_offer",
+                input_payload={"founder_profile": {}},
+            )
+        )
+    finally:
+        reset_ai_provider()
+
+    assert result["status"] == "failed"
+    assert "founder_profile_diagnosis failed" in result["error"]

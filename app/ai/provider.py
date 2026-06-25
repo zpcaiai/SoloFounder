@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
-import os
 from dataclasses import dataclass
 from typing import Any, Protocol
+
+from app.core.config import get_settings
 
 
 class AIProvider(Protocol):
@@ -455,7 +456,7 @@ _provider: AIProvider | None = None
 
 
 def _build_provider_from_env() -> AIProvider:
-    name = os.getenv("REVENUEPILOT_AI_PROVIDER", "deterministic").strip().lower()
+    name = get_settings().ai_provider
     if name in {"anthropic", "claude"}:
         from app.ai.anthropic_provider import AnthropicProvider
 
