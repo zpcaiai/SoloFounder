@@ -1,0 +1,42 @@
+name: Neon database migrations
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "sql/migrations/**"
+      - ".github/workflows/neon-migrate.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: neon-migrations-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Neon database secret
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "Missing GitHub secret NEON_DATABASE_URL"
+            exit 1
+          fi
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Apply SQL migrations
+        run: |
+          for migration in sql/migrations/*.sql; do
+            echo "Applying ${migration}"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$migration"
+          done
