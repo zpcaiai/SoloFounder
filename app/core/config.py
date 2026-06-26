@@ -30,6 +30,7 @@ class Settings(BaseModel):
 
     api_key: str | None = Field(default=None)
     api_key_header: str = Field(default="X-API-Key")
+    supabase_jwt_secret: str | None = Field(default=None)
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
     rate_limit_per_minute: int = Field(default=120)
     log_level: str = Field(default="INFO")
@@ -120,6 +121,7 @@ def get_settings() -> Settings:
         model=env.get("REVENUEPILOT_MODEL") or env.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
         api_key=env.get("REVENUEPILOT_API_KEY"),
         api_key_header=env.get("API_KEY_HEADER") or env.get("REVENUEPILOT_API_KEY_HEADER", "X-API-Key"),
+        supabase_jwt_secret=env.get("SUPABASE_JWT_SECRET") or env.get("REVENUEPILOT_JWT_SECRET"),
         cors_origins=[
             item.strip()
             for item in (env.get("CORS_ORIGINS") or env.get("REVENUEPILOT_CORS_ORIGINS") or "*").split(",")

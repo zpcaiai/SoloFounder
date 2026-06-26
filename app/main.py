@@ -10,6 +10,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.api.routes.dashboard import router as dashboard_router
+from app.api.routes.deals import router as deals_router
+from app.api.routes.delivery import router as delivery_router
+from app.api.routes.ideas import router as ideas_router
+from app.api.routes.landing_pages import router as landing_pages_router
+from app.api.routes.leads import router as leads_router
+from app.api.routes.offers import router as offers_router
+from app.api.routes.outreach import router as outreach_router
+from app.api.routes.personas import router as personas_router
+from app.api.routes.profile import router as profile_router
+from app.api.routes.projects import router as projects_router
+from app.api.routes.proposals import router as proposals_router
+from app.api.routes.revenue import router as revenue_router
 from app.api.routes.skills import router as skills_router
 from app.api.routes.workflows import router as workflows_router
 from app.core.config import get_settings
@@ -44,6 +57,19 @@ def create_app() -> FastAPI:
 
     app.include_router(skills_router)
     app.include_router(workflows_router)
+    app.include_router(profile_router)
+    app.include_router(projects_router)
+    app.include_router(ideas_router)
+    app.include_router(personas_router)
+    app.include_router(offers_router)
+    app.include_router(landing_pages_router)
+    app.include_router(outreach_router)
+    app.include_router(leads_router)
+    app.include_router(deals_router)
+    app.include_router(proposals_router)
+    app.include_router(delivery_router)
+    app.include_router(revenue_router)
+    app.include_router(dashboard_router)
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:

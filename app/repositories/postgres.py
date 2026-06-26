@@ -561,6 +561,90 @@ class PostgresEntityRepository:
         }
 
 
+class PostgresBusinessRepository:
+    def __init__(self, pool: AsyncpgPool) -> None:
+        self.pool = pool
+
+    async def create(
+        self,
+        *,
+        user_id: str,
+        entity_type: str,
+        data: dict[str, Any],
+        project_id: str | UUID | None = None,
+    ) -> dict[str, Any]:
+        pool = await self.pool.pool()
+        table_map = {
+            "projects": "business_projects",
+            "founder_profiles": "founder_profiles",
+            "ideas": "business_ideas",
+            "personas": "customer_personas",
+            "offers": "offers",
+            "landing_pages": "landing_pages",
+            "outreach": "outreach_assets",
+            "leads": "leads",
+            "deals": "crm_deals",
+            "proposals": "proposals",
+            "delivery_projects": "delivery_projects",
+            "delivery_tasks": "delivery_tasks",
+            "deliverables": "deliverables",
+            "revenue": "revenue_records",
+            "retention_plans": "retention_plans",
+            "knowledge_assets": "knowledge_assets",
+            "customer_feedback": "customer_feedback",
+            "market_hypotheses": "market_hypotheses",
+        }
+        table = table_map.get(entity_type, entity_type)
+        row = await pool.fetchrow(
+            f"insert into public.{table} (user_id, project_id, payload) values ($1, $2, $3::jsonb) returning id, created_at, updated_at",  # noqa: S608
+            user_id,
+            _uuid(project_id),
+            _json(data),
+        )
+        return {
+            "id": str(row["id"]),
+            "user_id": user_id,
+            "project_id": str(project_id) if project_id else None,
+            "entity_type": entity_type,
+            "data": data,
+            "created_at": row["created_at"].isoformat() if row.get("created_at") else None,
+            "updated_at": row["updated_at"].isoformat() if row.get("updated_at") else None,
+        }
+
+    async def get(self, *, entity_id: UUID, user_id: str) -> dict[str, Any]:
+        raise NotImplementedError("Use entity-specific queries for Postgres.")
+
+    async def list(
+        self,
+        *,
+        user_id: str,
+        entity_type: str,
+        project_id: str | UUID | None = None,
+    ) -> list[dict[str, Any]]:
+        raise NotImplementedError("Use entity-specific queries for Postgres.")
+
+    async def update(
+        self,
+        *,
+        entity_id: UUID,
+        user_id: str,
+        data: dict[str, Any],
+    ) -> dict[str, Any]:
+        raise NotImplementedError("Use entity-specific queries for Postgres.")
+
+    async def delete(self, *, entity_id: UUID, user_id: str) -> None:
+        raise NotImplementedError("Use entity-specific queries for Postgres.")
+
+    async def count(
+        self,
+        *,
+        user_id: str,
+        entity_type: str,
+        project_id: str | UUID | None = None,
+    ) -> int:
+        raise NotImplementedError("Use entity-specific queries for Postgres.")
+
+
 class PostgresRepositoryBundle(RepositoryBundle):
     def __init__(self, database_url: str, **pool_kwargs: Any) -> None:
         self._pool = AsyncpgPool(database_url, **pool_kwargs)
@@ -569,6 +653,7 @@ class PostgresRepositoryBundle(RepositoryBundle):
             ai_generations=PostgresAIGenerationRepository(self._pool),
             workflow_runs=PostgresWorkflowRunRepository(self._pool),
             entities=PostgresEntityRepository(self._pool),
+            business=PostgresBusinessRepository(self._pool),
         )
 
     async def close(self) -> None:

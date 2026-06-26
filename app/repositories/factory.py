@@ -5,6 +5,7 @@ from typing import Any
 
 from app.core.config import get_settings
 from app.repositories.ai_generation_repo import InMemoryAIGenerationRepository, ai_generation_repo
+from app.repositories.business_repo import InMemoryBusinessRepository, business_repo
 from app.repositories.skill_run_repo import InMemorySkillRunRepository, skill_run_repo
 from app.repositories.workflow_run_repo import InMemoryWorkflowRunRepository, workflow_run_repo
 
@@ -15,6 +16,7 @@ class RepositoryBundle:
     ai_generations: Any
     workflow_runs: Any
     entities: Any | None = None
+    business: Any | None = None
 
 
 _repository_bundle: RepositoryBundle | None = None
@@ -41,6 +43,7 @@ def get_repositories() -> RepositoryBundle:
             ai_generations=ai_generation_repo,
             workflow_runs=workflow_run_repo,
             entities=None,
+            business=business_repo,
         )
     return _repository_bundle
 
@@ -66,7 +69,7 @@ async def close_repository_bundle() -> None:
 
 
 def reset_in_memory_repositories() -> None:
-    for repo in (skill_run_repo, ai_generation_repo, workflow_run_repo):
+    for repo in (skill_run_repo, ai_generation_repo, workflow_run_repo, business_repo):
         repo.reset()
 
 
@@ -76,4 +79,5 @@ def new_in_memory_bundle() -> RepositoryBundle:
         ai_generations=InMemoryAIGenerationRepository(),
         workflow_runs=InMemoryWorkflowRunRepository(),
         entities=None,
+        business=InMemoryBusinessRepository(),
     )
