@@ -119,3 +119,172 @@ export async function runWorkflow(workflow_name: string, payload: Record<string,
     }),
   });
 }
+
+// --- Business entity types ---
+
+export type Entity = {
+  id: string;
+  user_id: string;
+  project_id: string | null;
+  entity_type: string;
+  data: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+// --- Profile ---
+
+export async function getProfile() {
+  return api("/api/profile", { method: "GET" });
+}
+
+export async function upsertProfile(payload: Record<string, unknown>) {
+  return api("/api/profile", { method: "PUT", body: JSON.stringify(payload) });
+}
+
+// --- Projects ---
+
+export async function listProjects() {
+  return api("/api/projects", { method: "GET" }) as Promise<Entity[]>;
+}
+
+export async function createProject(payload: Record<string, unknown>) {
+  return api("/api/projects", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export async function getProject(id: string) {
+  return api(`/api/projects/${id}`, { method: "GET" }) as Promise<Entity>;
+}
+
+export async function updateProject(id: string, payload: Record<string, unknown>) {
+  return api(`/api/projects/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+}
+
+export async function deleteProject(id: string) {
+  return api(`/api/projects/${id}`, { method: "DELETE" });
+}
+
+// --- Generic project-scoped CRUD ---
+
+function projectPath(entity: string, projectId?: string, entityId?: string) {
+  const pid = projectId || settings.projectId;
+  let base = `/api/projects/${pid}/${entity}`;
+  if (entityId) base += `/${entityId}`;
+  return base;
+}
+
+export async function listEntities(entity: string, projectId?: string) {
+  return api(projectPath(entity, projectId), { method: "GET" }) as Promise<Entity[]>;
+}
+
+export async function createEntity(entity: string, payload: Record<string, unknown>, projectId?: string) {
+  return api(projectPath(entity, projectId), { method: "POST", body: JSON.stringify(payload) });
+}
+
+export async function getEntity(entity: string, entityId: string, projectId?: string) {
+  return api(projectPath(entity, projectId, entityId), { method: "GET" }) as Promise<Entity>;
+}
+
+export async function updateEntity(entity: string, entityId: string, payload: Record<string, unknown>, projectId?: string) {
+  return api(projectPath(entity, projectId, entityId), { method: "PUT", body: JSON.stringify(payload) });
+}
+
+export async function deleteEntity(entity: string, entityId: string, projectId?: string) {
+  return api(projectPath(entity, projectId, entityId), { method: "DELETE" });
+}
+
+// --- Business actions ---
+
+export async function generateIdeas(projectId?: string) {
+  return api(`${projectPath("ideas", projectId)}/generate`, { method: "POST" });
+}
+
+export async function convertIdeaToOffer(ideaId: string, projectId?: string) {
+  return api(`${projectPath("ideas", projectId, ideaId)}/convert-to-offer`, { method: "POST" });
+}
+
+export async function generatePersona(projectId?: string) {
+  return api(`${projectPath("personas", projectId)}/generate`, { method: "POST" });
+}
+
+export async function generateInterview(personaId: string, projectId?: string) {
+  return api(`${projectPath("personas", projectId, personaId)}/generate-interview`, { method: "POST" });
+}
+
+export async function generateLandingPage(offerId: string, projectId?: string) {
+  return api(`${projectPath("offers", projectId, offerId)}/generate-landing-page`, { method: "POST" });
+}
+
+export async function generateOutreachKit(offerId: string, projectId?: string) {
+  return api(`${projectPath("offers", projectId, offerId)}/generate-outreach-kit`, { method: "POST" });
+}
+
+export async function publishLandingPage(landingPageId: string, projectId?: string) {
+  return api(`${projectPath("landing-pages", projectId, landingPageId)}/publish`, { method: "POST" });
+}
+
+export async function unpublishLandingPage(landingPageId: string, projectId?: string) {
+  return api(`${projectPath("landing-pages", projectId, landingPageId)}/unpublish`, { method: "POST" });
+}
+
+export async function approveOutreach(outreachId: string, projectId?: string) {
+  return api(`${projectPath("outreach", projectId, outreachId)}/approve`, { method: "POST" });
+}
+
+export async function markDealWon(dealId: string, projectId?: string) {
+  return api(`${projectPath("deals", projectId, dealId)}/mark-won`, { method: "POST" });
+}
+
+export async function markDealLost(dealId: string, projectId?: string) {
+  return api(`${projectPath("deals", projectId, dealId)}/mark-lost`, { method: "POST" });
+}
+
+export async function generateProposal(dealId: string, projectId?: string) {
+  return api(`${projectPath("deals", projectId, dealId)}/generate-proposal`, { method: "POST" });
+}
+
+export async function generateDeliveryProject(dealId: string, projectId?: string) {
+  return api(`${projectPath("deals", projectId, dealId)}/generate-delivery-project`, { method: "POST" });
+}
+
+// --- Delivery tasks ---
+
+export async function createDeliveryTask(deliveryProjectId: string, payload: Record<string, unknown>, projectId?: string) {
+  return api(`${projectPath("delivery", projectId)}/projects/${deliveryProjectId}/tasks`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function listDeliveryTasks(deliveryProjectId: string, projectId?: string) {
+  return api(`${projectPath("delivery", projectId)}/projects/${deliveryProjectId}/tasks`, {
+    method: "GET",
+  }) as Promise<Entity[]>;
+}
+
+export async function updateDeliveryTask(taskId: string, payload: Record<string, unknown>, projectId?: string) {
+  return api(`${projectPath("delivery", projectId)}/tasks/${taskId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteDeliveryTask(taskId: string, projectId?: string) {
+  return api(`${projectPath("delivery", projectId)}/tasks/${taskId}`, { method: "DELETE" });
+}
+
+// --- Revenue summary ---
+
+export async function revenueSummary(projectId?: string) {
+  return api(`${projectPath("revenue", projectId)}/summary/total`, { method: "GET" });
+}
+
+// --- Dashboard ---
+
+export async function projectDashboard(projectId?: string) {
+  return api(`${projectPath("dashboard", projectId)}`, { method: "GET" });
+}
+
+export async function nextActions(projectId?: string) {
+  return api(`${projectPath("dashboard", projectId)}/next-actions`, { method: "GET" });
+}

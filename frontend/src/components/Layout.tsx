@@ -1,11 +1,23 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Activity, Cpu, History, Home, Settings, Wrench } from "lucide-react";
+import { Activity, Cpu, History, Home, Settings, Wrench, FolderKanban, Lightbulb, Users, Tag, FileText, Send, UserSearch, Handshake, FileSignature, Package, DollarSign, LayoutDashboard } from "lucide-react";
 import { settings } from "../api";
 import { useI18n } from "../i18n/LanguageContext";
 import type { TranslationKey } from "../i18n/translations";
 
 const navItems: { to: string; icon: React.ElementType; labelKey: TranslationKey }[] = [
   { to: "/", icon: Home, labelKey: "nav_dashboard" },
+  { to: "/overview", icon: LayoutDashboard, labelKey: "nav_business_dashboard" },
+  { to: "/projects", icon: FolderKanban, labelKey: "nav_projects" },
+  { to: "/ideas", icon: Lightbulb, labelKey: "nav_ideas" },
+  { to: "/personas", icon: Users, labelKey: "nav_personas" },
+  { to: "/offers", icon: Tag, labelKey: "nav_offers" },
+  { to: "/landing-pages", icon: FileText, labelKey: "nav_landing_pages" },
+  { to: "/outreach", icon: Send, labelKey: "nav_outreach" },
+  { to: "/leads", icon: UserSearch, labelKey: "nav_leads" },
+  { to: "/deals", icon: Handshake, labelKey: "nav_deals" },
+  { to: "/proposals", icon: FileSignature, labelKey: "nav_proposals" },
+  { to: "/delivery", icon: Package, labelKey: "nav_delivery" },
+  { to: "/revenue", icon: DollarSign, labelKey: "nav_revenue" },
   { to: "/skills", icon: Wrench, labelKey: "nav_skills" },
   { to: "/workflows", icon: Cpu, labelKey: "nav_workflows" },
   { to: "/history", icon: History, labelKey: "nav_history" },
