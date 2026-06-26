@@ -20,7 +20,7 @@ export function BusinessDashboard() {
           nextActions().catch(() => []),
         ]);
         setDashboard(d);
-        setActions(Array.isArray(a) ? a : (a as Record<string, unknown>)?.actions as string[] ?? []);
+        setActions(Array.isArray(a) ? a : (a as Record<string, unknown>)?.next_actions as string[] ?? []);
         setError(null);
       } catch (e) {
         setError(e instanceof Error ? e.message : t("errorOccurred"));
@@ -43,9 +43,9 @@ export function BusinessDashboard() {
 
   const totalRevenue = Number(dashboard?.total_revenue ?? 0);
   const activeLeads = Number(dashboard?.active_leads ?? 0);
-  const openDeals = Number(dashboard?.open_deals ?? 0);
-  const activeOffers = Number(dashboard?.active_offers ?? 0);
-  const openDelivery = Number(dashboard?.open_delivery ?? 0);
+  const openDeals = Number(dashboard?.total_deals ?? 0);
+  const activeOffers = Number(dashboard?.offers_count ?? 0);
+  const openDelivery = Number(dashboard?.open_delivery_projects ?? 0);
 
   const cards = [
     { icon: TrendingUp, iconColor: "text-green-500", label: t("totalRevenueLabel"), value: `¥${totalRevenue.toLocaleString()}` },

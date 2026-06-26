@@ -19,7 +19,7 @@ export function Delivery() {
 
   const load = async () => {
     if (!settings.projectId) { setError(t("selectProjectFirst")); setLoading(false); return; }
-    try { setLoading(true); setEntities(await listEntities("delivery")); setError(null); }
+    try { setLoading(true); setEntities(await listEntities("delivery/projects")); setError(null); }
     catch (e) { setError(e instanceof Error ? e.message : t("errorOccurred")); }
     finally { setLoading(false); }
   };
@@ -33,8 +33,8 @@ export function Delivery() {
 
   const handleSave = async () => {
     const payload = modal.getPayload();
-    if (modal.editingId) { await updateEntity("delivery", modal.editingId, payload); }
-    else { await createEntity("delivery", payload); }
+    if (modal.editingId) { await updateEntity("delivery/projects", modal.editingId, payload); }
+    else { await createEntity("delivery/projects", payload); }
     modal.close(); await load();
   };
 
@@ -68,7 +68,7 @@ export function Delivery() {
         onCreate={() => modal.open()}
         createLabelKey="create"
         onEdit={(e) => modal.open(e)}
-        onDelete={async (e) => { await deleteEntity("delivery", e.id); await load(); }}
+        onDelete={async (e) => { await deleteEntity("delivery/projects", e.id); await load(); }}
         actions={[{ labelKey: "deliveryTasks", onClick: (e) => { setSelectedProject(e); loadTasks(e.id); }, variant: "secondary" }]}
         renderRow={(entity) => (
           <div className="space-y-1">

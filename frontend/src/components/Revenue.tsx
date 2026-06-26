@@ -18,7 +18,7 @@ export function Revenue() {
       setLoading(true);
       setEntities(await listEntities("revenue"));
       const summary = await revenueSummary();
-      setTotalRevenue(typeof summary === "number" ? summary : Number(summary?.total ?? 0));
+      setTotalRevenue(typeof summary === "number" ? summary : Number(summary?.total_revenue ?? 0));
       setError(null);
     } catch (e) { setError(e instanceof Error ? e.message : t("errorOccurred")); }
     finally { setLoading(false); }
