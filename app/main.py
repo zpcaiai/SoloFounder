@@ -7,8 +7,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, PlainTextResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.routes.skills import router as skills_router
@@ -89,9 +88,13 @@ def create_app() -> FastAPI:
         async def metrics() -> str:
             return metrics_collector.render()
 
-    public_dir = Path(__file__).resolve().parents[1] / "public"
-    if public_dir.is_dir():
-        app.mount("/", StaticFiles(directory=str(public_dir), html=True), name="static")
+    ui_path = Path(__file__).resolve().parent / "static" / "index.html"
+    if ui_path.is_file():
+        ui_html = ui_path.read_text(encoding="utf-8")
+
+        @app.get("/{path:path}")
+        async def spa_catch_all(path: str) -> HTMLResponse:
+            return HTMLResponse(content=ui_html)
 
     return app
 

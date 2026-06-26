@@ -25,7 +25,7 @@ pytest -q
 uvicorn app.main:app --reload
 ```
 
-The API is available at `http://localhost:8000`. When `public/` exists (after building the frontend), the root path serves the React console.
+The API is available at `http://localhost:8000`. After building the frontend (`npm run build`), `app/static/index.html` is served at the root path.
 
 ## Frontend console
 
