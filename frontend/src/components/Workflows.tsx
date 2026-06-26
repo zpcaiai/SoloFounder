@@ -1,23 +1,13 @@
 import { useState } from "react";
 import { AlertCircle, Play } from "lucide-react";
 import { runWorkflow } from "../api";
+import { useI18n } from "../i18n/LanguageContext";
+import type { TranslationKey } from "../i18n/translations";
 
-const workflows = [
-  {
-    id: "idea_to_offer",
-    label: "Idea to Offer",
-    description: "Diagnose founder profile, select niche, validate market, and productize an offer.",
-  },
-  {
-    id: "deal_to_delivery",
-    label: "Deal to Delivery",
-    description: "Coach a CRM deal, write a proposal, and plan the delivery project.",
-  },
-  {
-    id: "content_to_product",
-    label: "Content to Product",
-    description: "Turn knowledge assets into a productized offer.",
-  },
+const workflowMeta: { id: string; labelKey: TranslationKey; descKey: TranslationKey }[] = [
+  { id: "idea_to_offer", labelKey: "ideaToOffer", descKey: "ideaToOfferDesc" },
+  { id: "deal_to_delivery", labelKey: "dealToDelivery", descKey: "dealToDeliveryDesc" },
+  { id: "content_to_product", labelKey: "contentToProduct", descKey: "contentToProductDesc" },
 ];
 
 const defaultPayload = {
@@ -35,6 +25,7 @@ const defaultPayload = {
 };
 
 export function Workflows() {
+  const { t } = useI18n();
   const [selected, setSelected] = useState<string>("idea_to_offer");
   const [payload, setPayload] = useState<string>(JSON.stringify(defaultPayload, null, 2));
   const [result, setResult] = useState<unknown | null>(null);
@@ -59,7 +50,7 @@ export function Workflows() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {workflows.map((wf) => (
+        {workflowMeta.map((wf) => (
           <button
             key={wf.id}
             onClick={() => setSelected(wf.id)}
@@ -69,16 +60,16 @@ export function Workflows() {
                 : "border-slate-200 bg-white hover:border-indigo-300"
             }`}
           >
-            <div className="font-medium">{wf.label}</div>
-            <div className="text-sm text-slate-500 mt-1">{wf.description}</div>
+            <div className="font-medium">{t(wf.labelKey)}</div>
+            <div className="text-sm text-slate-500 mt-1">{t(wf.descKey)}</div>
           </button>
         ))}
       </div>
 
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5 flex flex-col gap-3">
-        <label className="block text-sm font-medium text-slate-700">Workflow input payload (JSON)</label>
+        <label className="block text-sm font-medium text-slate-700">{t("workflowInputPayload")}</label>
         <textarea
-          aria-label="Workflow input payload"
+          aria-label={t("workflowInputPayload")}
           className="min-h-[240px] w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
           value={payload}
           onChange={(e) => setPayload(e.target.value)}
@@ -90,7 +81,7 @@ export function Workflows() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Play className="w-4 h-4" />
-            {running ? "Running…" : "Run workflow"}
+            {running ? t("running") : t("runWorkflow")}
           </button>
         </div>
       </div>
@@ -104,7 +95,7 @@ export function Workflows() {
 
       {result !== null && (
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-200 font-medium">Result</div>
+          <div className="px-6 py-4 border-b border-slate-200 font-medium">{t("result")}</div>
           <pre className="p-6 text-xs overflow-auto max-h-[600px]">{JSON.stringify(result, null, 2)}</pre>
         </div>
       )}

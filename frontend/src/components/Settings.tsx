@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Save } from "lucide-react";
 import { settings } from "../api";
+import { useI18n } from "../i18n/LanguageContext";
 
 export function Settings() {
+  const { t } = useI18n();
   const [apiBase, setApiBase] = useState(settings.apiBase);
   const [userId, setUserId] = useState(settings.userId);
   const [apiKey, setApiKey] = useState(settings.apiKey);
@@ -13,27 +15,27 @@ export function Settings() {
     settings.userId = userId;
     settings.apiKey = apiKey;
     settings.projectId = projectId;
-    alert("Settings saved. Reload the page to apply changes.");
+    alert(t("settingsSaved"));
   };
 
   return (
     <div className="max-w-2xl bg-white rounded-lg border border-slate-200 shadow-sm p-6 space-y-6">
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">API base URL</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{t("apiBaseUrl")}</label>
         <input
           type="text"
           value={apiBase}
           onChange={(e) => setApiBase(e.target.value)}
-          placeholder="Leave empty for same origin"
+          placeholder={t("apiBaseUrlPlaceholder")}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
         <p className="text-xs text-slate-500 mt-1">
-          For local dev with Vite proxy, keep this empty. For a remote backend, enter the full URL.
+          {t("apiBaseUrlHint")}
         </p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">User ID</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{t("userId")}</label>
         <input
           type="text"
           value={userId}
@@ -41,11 +43,11 @@ export function Settings() {
           placeholder="user-1"
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
-        <p className="text-xs text-slate-500 mt-1">Required in production as X-User-Id header.</p>
+        <p className="text-xs text-slate-500 mt-1">{t("userIdHint")}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">API key</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{t("apiKey")}</label>
         <input
           type="password"
           value={apiKey}
@@ -53,11 +55,11 @@ export function Settings() {
           placeholder="••••••••"
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
-        <p className="text-xs text-slate-500 mt-1">Required in production as X-API-Key header.</p>
+        <p className="text-xs text-slate-500 mt-1">{t("apiKeyHint")}</p>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Default project ID</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{t("defaultProjectId")}</label>
         <input
           type="text"
           value={projectId}
@@ -73,7 +75,7 @@ export function Settings() {
           className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700"
         >
           <Save className="w-4 h-4" />
-          Save settings
+          {t("saveSettings")}
         </button>
       </div>
     </div>

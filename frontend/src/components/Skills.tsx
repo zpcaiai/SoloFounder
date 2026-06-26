@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Play } from "lucide-react";
 import { listSkills, runSkill } from "../api";
+import { useI18n } from "../i18n/LanguageContext";
 
 const defaultPayloads: Record<string, string> = {
   founder_profile_diagnosis: '{"locale": "zh-CN"}',
@@ -19,6 +20,7 @@ const defaultPayloads: Record<string, string> = {
 };
 
 export function Skills() {
+  const { t } = useI18n();
   const [skills, setSkills] = useState<string[]>([]);
   const [selected, setSelected] = useState<string>("");
   const [payload, setPayload] = useState<string>("");
@@ -35,8 +37,8 @@ export function Skills() {
           setPayload(defaultPayloads[s[0]] || "{}");
         }
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load skills"));
-  }, []);
+      .catch((e) => setError(e instanceof Error ? e.message : t("failedSkills")));
+  }, [t]);
 
   useEffect(() => {
     setPayload(defaultPayloads[selected] || "{}");
@@ -61,9 +63,9 @@ export function Skills() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-5">
-          <label className="block text-sm font-medium text-slate-700 mb-2">Skill</label>
+          <label className="block text-sm font-medium text-slate-700 mb-2">{t("skill")}</label>
           <select
-            aria-label="Select skill"
+            aria-label={t("selectSkill")}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={selected}
             onChange={(e) => setSelected(e.target.value)}
@@ -77,9 +79,9 @@ export function Skills() {
         </div>
 
         <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 shadow-sm p-5 flex flex-col gap-3">
-          <label className="block text-sm font-medium text-slate-700">Input payload (JSON)</label>
+          <label className="block text-sm font-medium text-slate-700">{t("inputPayload")}</label>
           <textarea
-            aria-label="Skill input payload"
+            aria-label={t("skillInputPayload")}
             className="flex-1 min-h-[160px] w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={payload}
             onChange={(e) => setPayload(e.target.value)}
@@ -91,7 +93,7 @@ export function Skills() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Play className="w-4 h-4" />
-              {running ? "Running…" : "Run skill"}
+              {running ? t("running") : t("runSkill")}
             </button>
           </div>
         </div>
@@ -106,7 +108,7 @@ export function Skills() {
 
       {result !== null && (
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-200 font-medium">Result</div>
+          <div className="px-6 py-4 border-b border-slate-200 font-medium">{t("result")}</div>
           <pre className="p-6 text-xs overflow-auto max-h-[600px]">{JSON.stringify(result, null, 2)}</pre>
         </div>
       )}

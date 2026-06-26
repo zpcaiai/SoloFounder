@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { listSkillRuns, listWorkflowRuns, type SkillRun, type WorkflowRun } from "../api";
+import { useI18n } from "../i18n/LanguageContext";
 
 function formatTime(iso?: string) {
   if (!iso) return "—";
@@ -8,6 +9,7 @@ function formatTime(iso?: string) {
 }
 
 export function History() {
+  const { t } = useI18n();
   const [skillRuns, setSkillRuns] = useState<SkillRun[]>([]);
   const [workflowRuns, setWorkflowRuns] = useState<WorkflowRun[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function History() {
       setWorkflowRuns(workflows);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load history");
+      setError(e instanceof Error ? e.message : t("failedHistory"));
     } finally {
       setLoading(false);
     }
@@ -30,9 +32,9 @@ export function History() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [t]);
 
-  if (loading) return <div className="text-slate-500">Loading history…</div>;
+  if (loading) return <div className="text-slate-500">{t("loadingHistory")}</div>;
   if (error) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 flex items-start gap-3">
@@ -51,8 +53,8 @@ export function History() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-1 bg-white rounded-lg border border-slate-200 shadow-sm">
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-          <span className="font-medium">Runs</span>
-          <button aria-label="Refresh history" onClick={load} className="text-slate-500 hover:text-indigo-600">
+          <span className="font-medium">{t("runs")}</span>
+          <button aria-label={t("refreshHistory")} onClick={load} className="text-slate-500 hover:text-indigo-600">
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
@@ -76,19 +78,19 @@ export function History() {
             </li>
           ))}
           {combined.length === 0 && (
-            <li className="px-5 py-4 text-sm text-slate-500">No runs yet.</li>
+            <li className="px-5 py-4 text-sm text-slate-500">{t("noRunsYet")}</li>
           )}
         </ul>
       </div>
 
       <div className="lg:col-span-2 bg-white rounded-lg border border-slate-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-200 font-medium">Details</div>
+        <div className="px-6 py-4 border-b border-slate-200 font-medium">{t("details")}</div>
         {selected ? (
           <pre className="p-6 text-xs overflow-auto max-h-[600px]">
             {JSON.stringify(selected, null, 2)}
           </pre>
         ) : (
-          <div className="p-6 text-sm text-slate-500">Select a run to view details.</div>
+          <div className="p-6 text-sm text-slate-500">{t("selectRunToView")}</div>
         )}
       </div>
     </div>

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle, Clock, Terminal, TrendingUp } from "lucide-react";
 import { getHealth, getMetrics, listSkillRuns, listWorkflowRuns } from "../api";
+import { useI18n } from "../i18n/LanguageContext";
 
 export function Dashboard() {
+  const { t } = useI18n();
   const [health, setHealth] = useState<Record<string, string> | null>(null);
   const [metrics, setMetrics] = useState<string>("");
   const [skillCount, setSkillCount] = useState(0);
@@ -26,15 +28,15 @@ export function Dashboard() {
         setWorkflowCount(workflows.length);
         setError(null);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load dashboard");
+        setError(e instanceof Error ? e.message : t("failedDashboard"));
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []);
+  }, [t]);
 
-  if (loading) return <div className="text-slate-500">Loading dashboard…</div>;
+  if (loading) return <div className="text-slate-500">{t("loadingDashboard")}</div>;
   if (error) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700 flex items-start gap-3">
@@ -52,16 +54,16 @@ export function Dashboard() {
         <StatCard
           icon={isHealthy ? CheckCircle : AlertCircle}
           iconColor={isHealthy ? "text-green-500" : "text-red-500"}
-          label="Service health"
-          value={health?.status || "unknown"}
+          label={t("serviceHealth")}
+          value={health?.status || t("unknown")}
         />
-        <StatCard icon={Clock} iconColor="text-blue-500" label="Database" value={health?.database || "—"} />
-        <StatCard icon={Terminal} iconColor="text-purple-500" label="Skill runs" value={String(skillCount)} />
-        <StatCard icon={TrendingUp} iconColor="text-orange-500" label="Workflow runs" value={String(workflowCount)} />
+        <StatCard icon={Clock} iconColor="text-blue-500" label={t("database")} value={health?.database || "—"} />
+        <StatCard icon={Terminal} iconColor="text-purple-500" label={t("skillRuns")} value={String(skillCount)} />
+        <StatCard icon={TrendingUp} iconColor="text-orange-500" label={t("workflowRuns")} value={String(workflowCount)} />
       </div>
 
       <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
-        <div className="px-6 py-4 border-b border-slate-200 font-medium">Metrics</div>
+        <div className="px-6 py-4 border-b border-slate-200 font-medium">{t("metrics")}</div>
         <pre className="p-6 text-xs text-slate-700 overflow-auto max-h-96">{metrics}</pre>
       </div>
     </div>
