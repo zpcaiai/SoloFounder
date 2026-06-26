@@ -1,0 +1,19 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SOURCE = PROJECT_ROOT / "app" / "static" / "index.html"
+TARGET = PROJECT_ROOT / "app" / "ui_embed.py"
+
+
+def main() -> None:
+    if not SOURCE.is_file():
+        raise SystemExit(f"UI source not found: {SOURCE}")
+    html = SOURCE.read_text(encoding="utf-8")
+    TARGET.write_text(f'UI_HTML = {html!r}\n', encoding="utf-8")
+    print(f"Embedded UI into {TARGET} ({len(html)} bytes)")
+
+
+if __name__ == "__main__":
+    main()

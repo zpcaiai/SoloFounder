@@ -88,10 +88,20 @@ def create_app() -> FastAPI:
         async def metrics() -> str:
             return metrics_collector.render()
 
-    ui_path = Path(__file__).resolve().parent / "static" / "index.html"
-    if ui_path.is_file():
-        ui_html = ui_path.read_text(encoding="utf-8")
+    ui_html: str | None = None
+    try:
+        from app.ui_embed import UI_HTML
 
+        ui_html = UI_HTML
+    except Exception:
+        pass
+
+    if ui_html is None:
+        ui_path = Path(__file__).resolve().parent / "static" / "index.html"
+        if ui_path.is_file():
+            ui_html = ui_path.read_text(encoding="utf-8")
+
+    if ui_html is not None:
         @app.get("/{path:path}")
         async def spa_catch_all(path: str) -> HTMLResponse:
             return HTMLResponse(content=ui_html)

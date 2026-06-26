@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/index.py": {
-      "includeFiles": "app/static/index.html"
+      "includeFiles": "app/ui_embed.py"
     }
   },
   "rewrites": [
