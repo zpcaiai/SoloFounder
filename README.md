@@ -25,7 +25,7 @@ pytest -q
 uvicorn app.main:app --reload
 ```
 
-The API is available at `http://localhost:8000`. After building the frontend (`npm run build`), `app/static/index.html` is served at the root path.
+The API is available at `http://localhost:8000`. After building the frontend (`npm run build`), the root path serves the React console. The build also generates `app/ui_embed.py`, which embeds the UI as a Python string for reliable Vercel deployments.
 
 ## Frontend console
 
