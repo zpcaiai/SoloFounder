@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from app.skills.content_to_product import run as content_to_product
 from app.skills.crm_deal_coach import run as crm_deal_coach

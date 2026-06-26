@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-
 from app.ai.provider import reset_ai_provider, set_ai_provider
 from app.repositories.workflow_run_repo import workflow_run_repo
 from app.services.workflow_runner import workflow_runner

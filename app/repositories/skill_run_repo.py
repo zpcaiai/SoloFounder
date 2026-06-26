@@ -56,6 +56,13 @@ class InMemorySkillRunRepository:
             raise PermissionError("Skill run does not belong to this user.")
         return record
 
+    async def list_for_user(self, user_id: str) -> list[SkillRunRecord]:
+        return sorted(
+            [record for record in self.records.values() if record.user_id == user_id],
+            key=lambda record: record.created_at,
+            reverse=True,
+        )
+
     def reset(self) -> None:
         self.records.clear()
 

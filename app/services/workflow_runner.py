@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from app.repositories.factory import get_repositories
 from app.workflows.content_to_product import build_content_to_product_graph
 from app.workflows.deal_to_delivery import build_deal_to_delivery_graph
 from app.workflows.idea_to_offer import build_idea_to_offer_graph
-from app.workflows.state import RevenuePilotState
-
 
 WorkflowBuilder = Callable[[], Any]
 
@@ -38,12 +37,12 @@ class WorkflowRunner:
         )
         try:
             graph = WORKFLOW_BUILDERS[workflow_name]()
-            initial_state: RevenuePilotState = {
+            initial_state: dict[str, Any] = {
                 "user_id": user_id,
                 "project_id": project_id or input_payload.get("project_id", ""),
                 "locale": input_payload.get("locale", "zh-CN"),
-                **input_payload,
             }
+            initial_state.update(input_payload)
             final_state = await graph.ainvoke(initial_state)
             await repositories.workflow_runs.mark_succeeded(
                 workflow_run_id=workflow_run.id,

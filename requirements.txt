@@ -3,3 +3,4 @@ asyncpg>=0.29
 fastapi>=0.110
 langgraph>=0.2
 pydantic>=2
+uvicorn[standard]>=0.30

@@ -19,35 +19,6 @@ class AIProvider(Protocol):
         """Return a JSON object string for the requested skill."""
 
 
-def _spam_like(payload: dict[str, Any]) -> bool:
-    text = json.dumps(payload, ensure_ascii=False).lower()
-    blocked_terms = [
-        "mass blast",
-        "mass email",
-        "bulk send",
-        "spam",
-        "fake familiarity",
-        "fake testimonial",
-        "scrape",
-        "10000",
-        "10,000",
-    ]
-    return any(term in text for term in blocked_terms)
-
-
-def _regulated_advice_like(payload: dict[str, Any]) -> bool:
-    text = json.dumps(payload, ensure_ascii=False).lower()
-    blocked_terms = [
-        "tax filing",
-        "avoid tax",
-        "legal interpretation",
-        "investment return",
-        "securities",
-        "accounting advice",
-    ]
-    return any(term in text for term in blocked_terms)
-
-
 @dataclass(slots=True)
 class DeterministicRevenuePilotProvider:
     """Local provider used for tests and development without an API key."""
@@ -427,24 +398,6 @@ def sample_result_for_skill(skill_name: str, payload: dict[str, Any]) -> dict[st
             "next_actions": ["Choose first audience", "Validate promise", "Run paid pilot cohort"],
         },
     }
-
-    if skill_name == "sales_outreach" and _spam_like(payload):
-        return {
-            "warning": "This request appears to involve spam-like outreach. I can help create a low-volume personalized outreach plan instead.",
-            "safe_alternative": {
-                "plan": ["Identify 20 relevant prospects", "Personalize each note with real context", "Ask for a low-friction conversation"],
-                "human_approval_required": True,
-            },
-            **samples["sales_outreach"],
-        }
-
-    if skill_name == "revenue_retention" and _regulated_advice_like(payload):
-        result = samples["revenue_retention"].copy()
-        result["business_diagnosis"] = {
-            **result["business_diagnosis"],
-            "main_bottleneck": "The request included regulated advice territory; only operational business analysis is provided.",
-        }
-        return result
 
     try:
         return samples[skill_name]

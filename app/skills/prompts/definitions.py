@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 GLOBAL_RULES = """
 Global RevenuePilot OS rules (apply to every skill):
 1. Do not output vague or generic advice. Produce structured, specific, executable results.

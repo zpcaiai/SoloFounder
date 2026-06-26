@@ -2,9 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 from dataclasses import dataclass, field
 from typing import Any
+
+from app.core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "claude-sonnet-4-6"
 DEFAULT_MAX_TOKENS = 4096
@@ -62,7 +67,7 @@ def extract_json_object(text: str) -> str:
     raise ValueError("Unbalanced JSON object in model output.")
 
 
-@dataclass(slots=True)
+@dataclass
 class AnthropicProvider:
     """Calls the Anthropic Messages API and returns a JSON object string.
 
@@ -113,7 +118,25 @@ class AnthropicProvider:
         input_payload: dict[str, Any],
         output_schema: dict[str, Any],
     ) -> str:
-        raw = await asyncio.to_thread(self._call_sync, prompt)
-        json_text = extract_json_object(raw)
-        # Validate it parses; re-serialize to normalize. Executor re-validates against the schema.
-        return json.dumps(json.loads(json_text), ensure_ascii=False)
+        settings = get_settings()
+        last_error: Exception | None = None
+        for attempt in range(settings.ai_max_retries + 1):
+            try:
+                raw = await asyncio.wait_for(
+                    asyncio.to_thread(self._call_sync, prompt),
+                    timeout=settings.ai_timeout,
+                )
+                json_text = extract_json_object(raw)
+                # Validate it parses; re-serialize to normalize. Executor re-validates against the schema.
+                return json.dumps(json.loads(json_text), ensure_ascii=False)
+            except TimeoutError as exc:
+                last_error = exc
+                logger.warning("Anthropic attempt %s timed out", attempt + 1)
+            except Exception as exc:
+                last_error = exc
+                logger.warning("Anthropic attempt %s failed: %s", attempt + 1, exc.__class__.__name__)
+            if attempt < settings.ai_max_retries:
+                await asyncio.sleep(min(2**attempt, 8))
+        raise RuntimeError(
+            f"Anthropic call failed after {settings.ai_max_retries + 1} attempts"
+        ) from last_error

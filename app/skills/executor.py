@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ValidationError
 
@@ -142,7 +142,7 @@ async def run_skill(skill_name: str, envelope: dict[str, Any]) -> dict[str, Any]
             result_data = _loads_object(raw)
             result = result_model.model_validate(result_data)
             result_dict = _model_dump(result)
-            status = "blocked" if result_dict.get("warning") else "succeeded"
+            status: Literal["succeeded", "blocked"] = "blocked" if result_dict.get("warning") else "succeeded"
             warnings = _warnings(skill_name, result_dict)
             if skill_name == "revenue_retention" and is_regulated_revenue_request(input_payload):
                 warnings.append("Regulated advice request detected; output is limited to operational business analysis.")

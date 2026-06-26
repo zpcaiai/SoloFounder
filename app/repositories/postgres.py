@@ -29,8 +29,20 @@ def _uuid(value: str | UUID | None) -> UUID | None:
 
 
 class AsyncpgPool:
-    def __init__(self, database_url: str) -> None:
+    def __init__(
+        self,
+        database_url: str,
+        *,
+        min_size: int = 2,
+        max_size: int = 10,
+        command_timeout: int = 10,
+        max_inactive_time: float = 300.0,
+    ) -> None:
         self.database_url = database_url
+        self._min_size = min_size
+        self._max_size = max(max_size, min_size, 1)
+        self._command_timeout = command_timeout
+        self._max_inactive_time = max_inactive_time
         self._pool: Any = None
 
     async def pool(self) -> Any:
@@ -41,11 +53,25 @@ class AsyncpgPool:
                 raise RuntimeError("The 'asyncpg' package is required when REVENUEPILOT_DB=postgres.") from exc
             self._pool = await asyncpg.create_pool(
                 dsn=self.database_url,
-                min_size=0,
-                max_size=5,
-                command_timeout=30,
+                min_size=self._min_size,
+                max_size=self._max_size,
+                command_timeout=self._command_timeout,
+                max_inactive_time=self._max_inactive_time,
             )
         return self._pool
+
+    async def close(self) -> None:
+        if self._pool is not None:
+            await self._pool.close()
+            self._pool = None
+
+    async def health_check(self) -> bool:
+        try:
+            pool = await self.pool()
+            await pool.fetch("select 1")
+            return True
+        except Exception:
+            return False
 
 
 class PostgresSkillRunRepository:
@@ -123,6 +149,14 @@ class PostgresSkillRunRepository:
         if row is None:
             raise PermissionError("Skill run does not belong to this user.")
         return self._record(row)
+
+    async def list_for_user(self, user_id: str) -> list[SkillRunRecord]:
+        pool = await self.pool.pool()
+        rows = await pool.fetch(
+            "select * from public.skill_runs where user_id = $1 order by started_at desc",
+            user_id,
+        )
+        return [self._record(row) for row in rows]
 
     def _record(self, row: Any) -> SkillRunRecord:
         return SkillRunRecord(
@@ -488,7 +522,7 @@ class PostgresEntityRepository:
         return self._created(row, "delivery_projects", payload)
 
     async def _create_retention_plan(self, *, user_id: str, project_id: str | UUID | None, payload: dict[str, Any]) -> dict[str, Any]:
-        opportunity = next(iter(payload.get("retention_opportunities", [])), {})
+        opportunity: dict[str, Any] = next(iter(payload.get("retention_opportunities", [])), {})
         pool = await self.pool.pool()
         row = await pool.fetchrow(
             """
@@ -528,11 +562,14 @@ class PostgresEntityRepository:
 
 
 class PostgresRepositoryBundle(RepositoryBundle):
-    def __init__(self, database_url: str) -> None:
-        pool = AsyncpgPool(database_url)
+    def __init__(self, database_url: str, **pool_kwargs: Any) -> None:
+        self._pool = AsyncpgPool(database_url, **pool_kwargs)
         super().__init__(
-            skill_runs=PostgresSkillRunRepository(pool),
-            ai_generations=PostgresAIGenerationRepository(pool),
-            workflow_runs=PostgresWorkflowRunRepository(pool),
-            entities=PostgresEntityRepository(pool),
+            skill_runs=PostgresSkillRunRepository(self._pool),
+            ai_generations=PostgresAIGenerationRepository(self._pool),
+            workflow_runs=PostgresWorkflowRunRepository(self._pool),
+            entities=PostgresEntityRepository(self._pool),
         )
+
+    async def close(self) -> None:
+        await self._pool.close()

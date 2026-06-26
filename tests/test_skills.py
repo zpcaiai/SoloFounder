@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import asyncio
 
+from app.ai.provider import reset_ai_provider, set_ai_provider
 from app.repositories.ai_generation_repo import ai_generation_repo
 from app.repositories.factory import get_repositories, reset_repository_bundle
 from app.repositories.skill_run_repo import skill_run_repo
 from app.services.skill_runner import skill_runner
-from app.ai.provider import reset_ai_provider, set_ai_provider
 from app.skills.registry import SKILL_REGISTRY
 from app.skills.schemas import RESULT_MODELS, SkillEnvelope
 

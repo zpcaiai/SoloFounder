@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 try:  # pragma: no cover - exercised when langgraph is installed.
     from langgraph.graph import END, StateGraph
@@ -22,7 +23,7 @@ except ModuleNotFoundError:  # pragma: no cover - fallback is covered by tests i
                 current = self.edges.get(current, END)
             return state
 
-    class StateGraph:
+    class StateGraph:  # type: ignore[no-redef]
         def __init__(self, _state_type: Any) -> None:
             self.nodes: dict[str, NodeFn] = {}
             self.edges: dict[str, str] = {}

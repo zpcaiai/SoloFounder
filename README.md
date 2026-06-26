@@ -25,6 +25,31 @@ pytest -q
 uvicorn app.main:app --reload
 ```
 
+The API is available at `http://localhost:8000`. When `public/` exists (after building the frontend), the root path serves the React console.
+
+## Frontend console
+
+A React + Vite + TailwindCSS console lives in `frontend/`:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+During development the Vite dev server proxies `/api`, `/health`, and `/metrics` to the FastAPI backend:
+
+```bash
+# terminal 1
+uvicorn app.main:app --reload
+
+# terminal 2
+cd frontend
+npm run dev
+```
+
+Open `http://localhost:5173` to use the console. Configure the user ID, API key, and project ID in the Settings page.
+
 ## Deploy to Vercel
 
 This project is configured for Vercel's FastAPI runtime through:
@@ -100,3 +125,37 @@ GET /api/workflow-runs/{workflow_run_id}
 ```
 
 The default AI provider is deterministic so the system runs without an API key. Replace `app.ai.provider.set_ai_provider(...)` with a real provider adapter to call a production LLM.
+
+## Production configuration
+
+Copy `.env.example` to `.env` and set the required values. Key knobs:
+
+- `DATABASE_URL` / `REVENUEPILOT_DB=postgres` for persistence (memory is the default).
+- `DB_POOL_MIN`, `DB_POOL_MAX`, `DB_CONNECT_TIMEOUT` for Postgres connection tuning.
+- `REVENUEPILOT_API_KEY` and `API_KEY_HEADER` for API-key auth.
+- `CORS_ORIGINS` (comma-separated) for CORS allow-list.
+- `RATE_LIMIT_PER_MINUTE` for the per-user in-memory token bucket (default 120).
+- `REVENUEPILOT_REQUEST_TIMEOUT`, `REVENUEPILOT_MAX_REQUEST_BODY_SIZE` for runtime guards.
+- `REVENUEPILOT_AI_TIMEOUT`, `REVENUEPILOT_AI_MAX_RETRIES` for LLM calls.
+- `REVENUEPILOT_SKIP_DB_MIGRATION=1` to skip startup migrations on read-only replicas.
+
+In production (`REVENUEPILOT_ENV=production`) protected routes are fail-closed: an API key must be configured, and every request must supply both `X-API-Key` and `X-User-Id`.
+
+## Health and observability
+
+- `GET /health` returns service status and database connectivity (`memory` or `connected`/`degraded`).
+- `GET /metrics` returns Prometheus-style request counters when `METRICS_ENABLED=true`.
+- Every response includes `X-Request-ID` and `X-Response-Time-Ms` headers.
+- Security headers (`X-Content-Type-Options`, `X-Frame-Options`, etc.) are added automatically.
+- API keys are compared with constant-time `secrets.compare_digest` and never logged.
+- Set `LOG_FORMAT=json` to emit newline-delimited JSON logs for log aggregation.
+
+## Docker (local)
+
+A `Dockerfile` and `docker-compose.yml` are included for local development with Postgres:
+
+```bash
+docker compose up --build
+```
+
+This starts the API on `http://localhost:8000` and applies migrations on startup.

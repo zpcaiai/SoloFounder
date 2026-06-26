@@ -35,8 +35,8 @@ def _serialize(value: Any) -> Any:
         return value.isoformat()
     if isinstance(value, UUID):
         return str(value)
-    if is_dataclass(value):
-        return {key: _serialize(item) for key, item in asdict(value).items()}
+    if is_dataclass(value) and not isinstance(value, type):
+        return {key: _serialize(item) for key, item in asdict(value).items()}  # type: ignore[arg-type]
     if isinstance(value, dict):
         return {key: _serialize(item) for key, item in value.items()}
     if isinstance(value, list):

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
-
 from app.core.config import reset_settings_cache
 from app.main import create_app
 from app.repositories.factory import reset_repository_bundle
+from fastapi.testclient import TestClient
 
 
 def _client(monkeypatch, *, env: str = "development", api_key: str | None = None) -> TestClient:
