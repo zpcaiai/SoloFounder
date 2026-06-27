@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Play } from "lucide-react";
 import { listSkills, runSkill } from "../api";
-import { useI18n } from "../i18n/LanguageContext";
+import { useI18n } from "../i18n/useI18n";
 
 const defaultPayloads: Record<string, string> = {
   founder_profile_diagnosis: '{"locale": "zh-CN"}',

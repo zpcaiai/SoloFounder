@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { useI18n } from "../i18n/LanguageContext";
+import { useI18n } from "../i18n/useI18n";
 import { settings, listEntities, createEntity, updateEntity, deleteEntity, createDeliveryTask, listDeliveryTasks, updateDeliveryTask, deleteDeliveryTask, type Entity } from "../api";
-import { CrudList, Modal, useCrudModal, EntityDataViewer } from "./CrudList";
+import { CrudList, Modal, EntityDataViewer } from "./CrudList";
+import { useCrudModal } from "../hooks/useCrudModal";
 import { TextField } from "./EntityPage";
 
 export function Delivery() {
@@ -17,14 +18,14 @@ export function Delivery() {
   const [taskStatus, setTaskStatus] = useState("todo");
   const modal = useCrudModal<{ title: string; status: string }>({ title: "", status: "todo" });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!settings.projectId) { setError(t("selectProjectFirst")); setLoading(false); return; }
     try { setLoading(true); setEntities(await listEntities("delivery/projects")); setError(null); }
     catch (e) { setError(e instanceof Error ? e.message : t("errorOccurred")); }
     finally { setLoading(false); }
-  };
+  }, [t]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const loadTasks = async (projectId: string) => {
     try { setTasks(await listDeliveryTasks(projectId)); }

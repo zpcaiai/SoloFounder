@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { useI18n } from "../i18n/LanguageContext";
+import { useCallback, useEffect, useState } from "react";
+import { useI18n } from "../i18n/useI18n";
 import { settings, listEntities, createEntity, updateEntity, deleteEntity, generatePersona, generateInterview, type Entity } from "../api";
-import { CrudList, Modal, useCrudModal, EntityDataViewer } from "./CrudList";
+import { CrudList, Modal, EntityDataViewer } from "./CrudList";
+import { useCrudModal } from "../hooks/useCrudModal";
 import { TextField, TextAreaField } from "./EntityPage";
 
 export function Personas() {
@@ -12,14 +13,14 @@ export function Personas() {
   const [actionResult, setActionResult] = useState<string | null>(null);
   const modal = useCrudModal<{ name: string; demographics: string; pains: string }>({ name: "", demographics: "", pains: "" });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!settings.projectId) { setError(t("selectProjectFirst")); setLoading(false); return; }
     try { setLoading(true); setEntities(await listEntities("personas")); setError(null); }
     catch (e) { setError(e instanceof Error ? e.message : t("errorOccurred")); }
     finally { setLoading(false); }
-  };
+  }, [t]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const handleSave = async () => {
     const payload = modal.getPayload();

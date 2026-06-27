@@ -40,10 +40,20 @@ export const settings = {
     localStorage.setItem("rp_user_id", value);
   },
   get apiKey() {
-    return localStorage.getItem("rp_api_key") || "";
+    const sessionKey = sessionStorage.getItem("rp_api_key");
+    if (sessionKey) return sessionKey;
+    const legacyKey = localStorage.getItem("rp_api_key") || "";
+    if (legacyKey) {
+      sessionStorage.setItem("rp_api_key", legacyKey);
+      localStorage.removeItem("rp_api_key");
+    }
+    return legacyKey;
   },
   set apiKey(value: string) {
-    localStorage.setItem("rp_api_key", value);
+    const trimmed = value.trim();
+    if (trimmed) sessionStorage.setItem("rp_api_key", trimmed);
+    else sessionStorage.removeItem("rp_api_key");
+    localStorage.removeItem("rp_api_key");
   },
   get projectId() {
     return localStorage.getItem("rp_project_id") || "";
@@ -52,6 +62,22 @@ export const settings = {
     localStorage.setItem("rp_project_id", value);
   },
 };
+
+function formatErrorDetail(detail: unknown): string | null {
+  if (!detail) return null;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object" && "msg" in item) return String(item.msg);
+        return JSON.stringify(item);
+      })
+      .join("; ");
+  }
+  if (typeof detail === "object") return JSON.stringify(detail);
+  return String(detail);
+}
 
 async function api(path: string, options: RequestInit = {}) {
   const headers: Record<string, string> = {
@@ -66,14 +92,21 @@ async function api(path: string, options: RequestInit = {}) {
     headers,
   });
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}));
-    throw new Error(body.detail || `${res.status} ${res.statusText}`);
+    const body: { detail?: unknown; request_id?: string } = await res.json().catch(() => ({}));
+    const requestId = res.headers.get("X-Request-ID") || body.request_id;
+    const detail = formatErrorDetail(body.detail);
+    const message = detail || `${res.status} ${res.statusText}`;
+    throw new Error(requestId ? `${message} (request ${requestId})` : message);
   }
   return res.json();
 }
 
 export async function getHealth() {
   return api("/health", { method: "GET" });
+}
+
+export async function testConnection() {
+  return getHealth();
 }
 
 export async function getMetrics() {

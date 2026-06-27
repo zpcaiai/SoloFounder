@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AlertCircle, Play } from "lucide-react";
 import { runWorkflow } from "../api";
-import { useI18n } from "../i18n/LanguageContext";
+import { useI18n } from "../i18n/useI18n";
 import type { TranslationKey } from "../i18n/translations";
 
 const workflowMeta: { id: string; labelKey: TranslationKey; descKey: TranslationKey }[] = [

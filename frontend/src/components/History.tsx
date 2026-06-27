@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { listSkillRuns, listWorkflowRuns, type SkillRun, type WorkflowRun } from "../api";
-import { useI18n } from "../i18n/LanguageContext";
+import { useI18n } from "../i18n/useI18n";
 
 function formatTime(iso?: string) {
   if (!iso) return "—";
@@ -16,7 +16,7 @@ export function History() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<SkillRun | WorkflowRun | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const [skills, workflows] = await Promise.all([listSkillRuns(), listWorkflowRuns()]);
@@ -28,11 +28,11 @@ export function History() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     load();
-  }, [t]);
+  }, [load]);
 
   if (loading) return <div className="text-slate-500">{t("loadingHistory")}</div>;
   if (error) {

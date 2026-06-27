@@ -31,10 +31,6 @@ async def current_user_id(
     if settings.is_production and not settings.api_key and not settings.supabase_jwt_secret:
         raise HTTPException(status_code=503, detail="API authentication is not configured")
 
-    if settings.api_key and (not x_api_key or not secrets.compare_digest(x_api_key, settings.api_key)):
-        if not settings.supabase_jwt_secret:
-            raise HTTPException(status_code=401, detail="Invalid API key")
-
     if authorization and settings.supabase_jwt_secret:
         scheme, _, token = authorization.partition(" ")
         if scheme.lower() != "bearer" or not token:
@@ -45,7 +41,13 @@ async def current_user_id(
             raise HTTPException(status_code=401, detail="Token missing 'sub' claim")
         return str(sub)
 
-    if x_user_id:
+    api_key_valid = bool(
+        settings.api_key and x_api_key and secrets.compare_digest(x_api_key, settings.api_key)
+    )
+    if settings.api_key and not api_key_valid:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    if x_user_id and (api_key_valid or not settings.is_production):
         return x_user_id
 
     if settings.is_production:

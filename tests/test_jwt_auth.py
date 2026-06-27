@@ -9,6 +9,9 @@ from app.repositories.factory import reset_repository_bundle
 from fastapi.testclient import TestClient
 
 
+JWT_SECRET = "test-secret-key-with-at-least-32-bytes"
+
+
 def _client(monkeypatch, *, env: str = "development", jwt_secret: str | None = None) -> TestClient:
     monkeypatch.setenv("REVENUEPILOT_ENV", env)
     if jwt_secret:
@@ -29,7 +32,7 @@ def _make_token(secret: str, sub: str = "user-from-jwt") -> str:
 
 
 def test_jwt_auth_extracts_user_id(monkeypatch):
-    secret = "test-secret-key"
+    secret = JWT_SECRET
     client = _client(monkeypatch, env="production", jwt_secret=secret)
     token = _make_token(secret)
 
@@ -41,7 +44,7 @@ def test_jwt_auth_extracts_user_id(monkeypatch):
 
 
 def test_jwt_auth_rejects_invalid_token(monkeypatch):
-    secret = "test-secret-key"
+    secret = JWT_SECRET
     client = _client(monkeypatch, env="production", jwt_secret=secret)
 
     response = client.get(
@@ -52,7 +55,7 @@ def test_jwt_auth_rejects_invalid_token(monkeypatch):
 
 
 def test_jwt_auth_rejects_expired_token(monkeypatch):
-    secret = "test-secret-key"
+    secret = JWT_SECRET
     client = _client(monkeypatch, env="production", jwt_secret=secret)
 
     import jwt
@@ -73,8 +76,14 @@ def test_development_fallback_without_jwt(monkeypatch):
     assert response.status_code == 200
 
 
+def test_production_jwt_mode_rejects_spoofed_user_header(monkeypatch):
+    client = _client(monkeypatch, env="production", jwt_secret=JWT_SECRET)
+    response = client.get("/api/projects", headers={"X-User-Id": "spoofed-user"})
+    assert response.status_code == 401
+
+
 def test_decode_jwt_returns_payload():
-    secret = "test-secret"
+    secret = JWT_SECRET
     import jwt
 
     payload = {"sub": "user-1", "exp": int(time.time()) + 3600, "aud": "authenticated"}

@@ -1,6 +1,7 @@
 begin;
 
 -- Missing tables from Batch 2 spec
+create extension if not exists vector;
 
 create table if not exists public.profiles (
   id uuid primary key default gen_random_uuid(),

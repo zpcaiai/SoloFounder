@@ -1,7 +1,8 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { useI18n } from "../i18n/LanguageContext";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useI18n } from "../i18n/useI18n";
 import { settings, listEntities, createEntity, updateEntity, deleteEntity, type Entity } from "../api";
-import { CrudList, Modal, useCrudModal, EntityDataViewer } from "./CrudList";
+import { CrudList, Modal, EntityDataViewer } from "./CrudList";
+import { useCrudModal } from "../hooks/useCrudModal";
 import type { ActionButton } from "./CrudList";
 
 type EntityPageProps = {
@@ -29,7 +30,7 @@ export function EntityPage({
   const [error, setError] = useState<string | null>(null);
   const modal = useCrudModal<Record<string, unknown>>({});
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!settings.projectId) {
       setError(t("selectProjectFirst"));
       setLoading(false);
@@ -45,11 +46,11 @@ export function EntityPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [entityKey, t]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const handleSave = async () => {
     const payload = modal.getPayload();

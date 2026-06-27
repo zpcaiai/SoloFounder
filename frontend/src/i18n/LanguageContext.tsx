@@ -1,13 +1,6 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { I18nContext } from "./context";
 import { translations, type Lang, type TranslationKey } from "./translations";
-
-type I18nContextValue = {
-  lang: Lang;
-  setLang: (lang: Lang) => void;
-  t: (key: TranslationKey) => string;
-};
-
-const I18nContext = createContext<I18nContextValue | null>(null);
 
 const STORAGE_KEY = "rp_lang";
 
@@ -32,10 +25,4 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       {children}
     </I18nContext.Provider>
   );
-}
-
-export function useI18n() {
-  const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error("useI18n must be used within LanguageProvider");
-  return ctx;
 }

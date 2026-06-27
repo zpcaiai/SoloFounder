@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
@@ -8,8 +11,18 @@ from app.repositories.factory import RepositoryBundle
 from app.repositories.models import AIGenerationRecord, SkillRunRecord, WorkflowRunRecord
 
 
+def _json_default(value: Any) -> str:
+    if isinstance(value, UUID):
+        return str(value)
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return str(value)
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
 def _json(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False)
+    return json.dumps(value, ensure_ascii=False, default=_json_default)
 
 
 def _json_value(value: Any) -> Any:
@@ -26,6 +39,16 @@ def _uuid(value: str | UUID | None) -> UUID | None:
     if isinstance(value, UUID):
         return value
     return UUID(str(value))
+
+
+def _response_value(value: Any) -> Any:
+    if isinstance(value, UUID):
+        return str(value)
+    if isinstance(value, datetime | date):
+        return value.isoformat()
+    if isinstance(value, Decimal):
+        return float(value)
+    return value
 
 
 class AsyncpgPool:
@@ -56,7 +79,7 @@ class AsyncpgPool:
                 min_size=self._min_size,
                 max_size=self._max_size,
                 command_timeout=self._command_timeout,
-                max_inactive_time=self._max_inactive_time,
+                max_inactive_connection_lifetime=self._max_inactive_time,
             )
         return self._pool
 
@@ -561,6 +584,218 @@ class PostgresEntityRepository:
         }
 
 
+@dataclass(frozen=True)
+class BusinessTableConfig:
+    entity_type: str
+    table: str
+    columns: frozenset[str]
+    json_columns: frozenset[str] = frozenset()
+    uuid_columns: frozenset[str] = frozenset()
+    payload_column: str | None = None
+    metadata_column: str | None = None
+    has_project_id: bool = True
+
+
+BUSINESS_TABLES: dict[str, BusinessTableConfig] = {
+    "projects": BusinessTableConfig(
+        entity_type="projects",
+        table="business_projects",
+        columns=frozenset({"name", "description", "metadata"}),
+        json_columns=frozenset({"metadata"}),
+        metadata_column="metadata",
+        has_project_id=False,
+    ),
+    "profiles": BusinessTableConfig(
+        entity_type="profiles",
+        table="profiles",
+        columns=frozenset({"display_name", "email", "avatar_url", "metadata"}),
+        json_columns=frozenset({"metadata"}),
+        metadata_column="metadata",
+        has_project_id=False,
+    ),
+    "founder_profiles": BusinessTableConfig(
+        entity_type="founder_profiles",
+        table="founder_profiles",
+        columns=frozenset(
+            {
+                "skills",
+                "work_experience",
+                "domain_expertise",
+                "technical_ability",
+                "sales_experience",
+                "existing_content",
+                "audience_assets",
+                "personal_network",
+                "time_available_per_week",
+                "monthly_income_goal",
+                "preferred_customer_type",
+                "constraints",
+                "values_or_mission",
+            }
+        ),
+        json_columns=frozenset(
+            {
+                "skills",
+                "work_experience",
+                "domain_expertise",
+                "technical_ability",
+                "sales_experience",
+                "existing_content",
+                "audience_assets",
+                "personal_network",
+                "constraints",
+            }
+        ),
+    ),
+    "ideas": BusinessTableConfig(
+        entity_type="ideas",
+        table="business_ideas",
+        columns=frozenset(
+            {
+                "title",
+                "description",
+                "target_customer",
+                "pain_point",
+                "possible_offer",
+                "scores",
+                "risks",
+                "validation_steps",
+                "status",
+            }
+        ),
+        json_columns=frozenset({"scores", "risks", "validation_steps"}),
+    ),
+    "market_hypotheses": BusinessTableConfig(
+        entity_type="market_hypotheses",
+        table="market_hypotheses",
+        columns=frozenset({"business_idea_id", "selected_niche", "suspected_pain", "proposed_offer", "validation_plan", "status"}),
+        json_columns=frozenset({"validation_plan"}),
+        uuid_columns=frozenset({"business_idea_id"}),
+    ),
+    "personas": BusinessTableConfig(
+        entity_type="personas",
+        table="customer_personas",
+        columns=frozenset({"business_idea_id", "name", "role", "business_type", "payload"}),
+        json_columns=frozenset({"payload"}),
+        uuid_columns=frozenset({"business_idea_id"}),
+        payload_column="payload",
+    ),
+    "offers": BusinessTableConfig(
+        entity_type="offers",
+        table="offers",
+        columns=frozenset(
+            {
+                "business_idea_id",
+                "offer_name",
+                "one_line_promise",
+                "target_customer",
+                "pain",
+                "desired_result",
+                "deliverables",
+                "timeline",
+                "pricing",
+                "guarantee",
+                "scope_boundaries",
+                "client_requirements",
+                "upsell_path",
+                "retainer_path",
+                "status",
+            }
+        ),
+        json_columns=frozenset({"deliverables", "pricing", "scope_boundaries", "client_requirements", "upsell_path"}),
+        uuid_columns=frozenset({"business_idea_id"}),
+    ),
+    "landing_pages": BusinessTableConfig(
+        entity_type="landing_pages",
+        table="landing_pages",
+        columns=frozenset({"offer_id", "title", "payload", "published"}),
+        json_columns=frozenset({"payload"}),
+        uuid_columns=frozenset({"offer_id"}),
+        payload_column="payload",
+    ),
+    "outreach": BusinessTableConfig(
+        entity_type="outreach",
+        table="outreach_assets",
+        columns=frozenset({"offer_id", "channel", "payload", "human_approval_required"}),
+        json_columns=frozenset({"payload"}),
+        uuid_columns=frozenset({"offer_id"}),
+        payload_column="payload",
+    ),
+    "leads": BusinessTableConfig(
+        entity_type="leads",
+        table="leads",
+        columns=frozenset({"name", "company", "email", "source", "status", "payload"}),
+        json_columns=frozenset({"payload"}),
+        payload_column="payload",
+    ),
+    "deals": BusinessTableConfig(
+        entity_type="deals",
+        table="crm_deals",
+        columns=frozenset({"lead_id", "offer_id", "stage", "expected_value", "probability", "expected_close_date", "payload"}),
+        json_columns=frozenset({"payload"}),
+        uuid_columns=frozenset({"lead_id", "offer_id"}),
+        payload_column="payload",
+    ),
+    "proposals": BusinessTableConfig(
+        entity_type="proposals",
+        table="proposals",
+        columns=frozenset({"deal_id", "title", "payload", "status"}),
+        json_columns=frozenset({"payload"}),
+        uuid_columns=frozenset({"deal_id"}),
+        payload_column="payload",
+    ),
+    "delivery_projects": BusinessTableConfig(
+        entity_type="delivery_projects",
+        table="delivery_projects",
+        columns=frozenset({"deal_id", "proposal_id", "title", "client_name", "payload", "status"}),
+        json_columns=frozenset({"payload"}),
+        uuid_columns=frozenset({"deal_id", "proposal_id"}),
+        payload_column="payload",
+    ),
+    "delivery_tasks": BusinessTableConfig(
+        entity_type="delivery_tasks",
+        table="delivery_tasks",
+        columns=frozenset({"delivery_project_id", "title", "description", "priority", "status", "due_date", "completed_at"}),
+        uuid_columns=frozenset({"delivery_project_id"}),
+    ),
+    "deliverables": BusinessTableConfig(
+        entity_type="deliverables",
+        table="deliverables",
+        columns=frozenset({"delivery_project_id", "name", "description", "acceptance_criteria", "status"}),
+        json_columns=frozenset({"acceptance_criteria"}),
+        uuid_columns=frozenset({"delivery_project_id"}),
+    ),
+    "revenue": BusinessTableConfig(
+        entity_type="revenue",
+        table="revenue_records",
+        columns=frozenset({"deal_id", "offer_id", "customer_name", "amount", "currency", "received_at", "payload"}),
+        json_columns=frozenset({"payload"}),
+        uuid_columns=frozenset({"deal_id", "offer_id"}),
+        payload_column="payload",
+    ),
+    "retention_plans": BusinessTableConfig(
+        entity_type="retention_plans",
+        table="retention_plans",
+        columns=frozenset({"customer_name", "payload"}),
+        json_columns=frozenset({"payload"}),
+        payload_column="payload",
+    ),
+    "knowledge_assets": BusinessTableConfig(
+        entity_type="knowledge_assets",
+        table="knowledge_assets",
+        columns=frozenset({"title", "asset_type", "raw_text", "summary", "tags"}),
+        json_columns=frozenset({"tags"}),
+    ),
+    "customer_feedback": BusinessTableConfig(
+        entity_type="customer_feedback",
+        table="customer_feedback",
+        columns=frozenset({"customer_name", "feedback_type", "content", "rating", "payload"}),
+        json_columns=frozenset({"payload"}),
+        payload_column="payload",
+    ),
+}
+
+
 class PostgresBusinessRepository:
     def __init__(self, pool: AsyncpgPool) -> None:
         self.pool = pool
@@ -574,45 +809,23 @@ class PostgresBusinessRepository:
         project_id: str | UUID | None = None,
     ) -> dict[str, Any]:
         pool = await self.pool.pool()
-        table_map = {
-            "projects": "business_projects",
-            "founder_profiles": "founder_profiles",
-            "ideas": "business_ideas",
-            "personas": "customer_personas",
-            "offers": "offers",
-            "landing_pages": "landing_pages",
-            "outreach": "outreach_assets",
-            "leads": "leads",
-            "deals": "crm_deals",
-            "proposals": "proposals",
-            "delivery_projects": "delivery_projects",
-            "delivery_tasks": "delivery_tasks",
-            "deliverables": "deliverables",
-            "revenue": "revenue_records",
-            "retention_plans": "retention_plans",
-            "knowledge_assets": "knowledge_assets",
-            "customer_feedback": "customer_feedback",
-            "market_hypotheses": "market_hypotheses",
-        }
-        table = table_map.get(entity_type, entity_type)
+        config = self._config(entity_type)
+        values = self._prepare_insert_values(config, user_id=user_id, project_id=project_id, data=data)
+        columns = list(values.keys())
+        placeholders = [self._placeholder(index, column, config) for index, column in enumerate(columns, start=1)]
         row = await pool.fetchrow(
-            f"insert into public.{table} (user_id, project_id, payload) values ($1, $2, $3::jsonb) returning id, created_at, updated_at",  # noqa: S608
-            user_id,
-            _uuid(project_id),
-            _json(data),
+            f"""
+            insert into public.{config.table} ({", ".join(columns)})
+            values ({", ".join(placeholders)})
+            returning *
+            """,  # nosec B608
+            *values.values(),
         )
-        return {
-            "id": str(row["id"]),
-            "user_id": user_id,
-            "project_id": str(project_id) if project_id else None,
-            "entity_type": entity_type,
-            "data": data,
-            "created_at": row["created_at"].isoformat() if row.get("created_at") else None,
-            "updated_at": row["updated_at"].isoformat() if row.get("updated_at") else None,
-        }
+        return self._record(config, row)
 
     async def get(self, *, entity_id: UUID, user_id: str) -> dict[str, Any]:
-        raise NotImplementedError("Use entity-specific queries for Postgres.")
+        config, row = await self._find_for_user(entity_id=entity_id, user_id=user_id)
+        return self._record(config, row)
 
     async def list(
         self,
@@ -621,7 +834,20 @@ class PostgresBusinessRepository:
         entity_type: str,
         project_id: str | UUID | None = None,
     ) -> list[dict[str, Any]]:
-        raise NotImplementedError("Use entity-specific queries for Postgres.")
+        pool = await self.pool.pool()
+        config = self._config(entity_type)
+        if config.has_project_id and project_id is not None:
+            rows = await pool.fetch(
+                f"select * from public.{config.table} where user_id = $1 and project_id = $2 order by created_at desc",  # nosec B608
+                user_id,
+                _uuid(project_id),
+            )
+        else:
+            rows = await pool.fetch(
+                f"select * from public.{config.table} where user_id = $1 order by created_at desc",  # nosec B608
+                user_id,
+            )
+        return [self._record(config, row) for row in rows]
 
     async def update(
         self,
@@ -630,10 +856,40 @@ class PostgresBusinessRepository:
         user_id: str,
         data: dict[str, Any],
     ) -> dict[str, Any]:
-        raise NotImplementedError("Use entity-specific queries for Postgres.")
+        config, existing = await self._find_for_user(entity_id=entity_id, user_id=user_id)
+        pool = await self.pool.pool()
+        values = self._prepare_update_values(config, existing=existing, data=data)
+        if not values:
+            return self._record(config, existing)
+
+        assignments = [
+            f"{column} = {self._placeholder(index, column, config)}" for index, column in enumerate(values, start=1)
+        ]
+        row = await pool.fetchrow(
+            f"""
+            update public.{config.table}
+            set {", ".join(assignments)}
+            where id = ${len(values) + 1} and user_id = ${len(values) + 2}
+            returning *
+            """,  # nosec B608
+            *values.values(),
+            entity_id,
+            user_id,
+        )
+        if row is None:
+            raise PermissionError("Entity does not belong to this user.")
+        return self._record(config, row)
 
     async def delete(self, *, entity_id: UUID, user_id: str) -> None:
-        raise NotImplementedError("Use entity-specific queries for Postgres.")
+        config, _ = await self._find_for_user(entity_id=entity_id, user_id=user_id)
+        pool = await self.pool.pool()
+        result = await pool.execute(
+            f"delete from public.{config.table} where id = $1 and user_id = $2",  # nosec B608
+            entity_id,
+            user_id,
+        )
+        if result.endswith(" 0"):
+            raise PermissionError("Entity does not belong to this user.")
 
     async def count(
         self,
@@ -642,7 +898,130 @@ class PostgresBusinessRepository:
         entity_type: str,
         project_id: str | UUID | None = None,
     ) -> int:
-        raise NotImplementedError("Use entity-specific queries for Postgres.")
+        pool = await self.pool.pool()
+        config = self._config(entity_type)
+        if config.has_project_id and project_id is not None:
+            row = await pool.fetchrow(
+                f"select count(*) as count from public.{config.table} where user_id = $1 and project_id = $2",  # nosec B608
+                user_id,
+                _uuid(project_id),
+            )
+        else:
+            row = await pool.fetchrow(
+                f"select count(*) as count from public.{config.table} where user_id = $1",  # nosec B608
+                user_id,
+            )
+        return int(row["count"])
+
+    def _config(self, entity_type: str) -> BusinessTableConfig:
+        try:
+            return BUSINESS_TABLES[entity_type]
+        except KeyError:
+            raise ValueError(f"Unsupported business entity type: {entity_type}") from None
+
+    def _placeholder(self, index: int, column: str, config: BusinessTableConfig) -> str:
+        placeholder = f"${index}"
+        if column in config.json_columns:
+            return f"{placeholder}::jsonb"
+        return placeholder
+
+    def _prepare_insert_values(
+        self,
+        config: BusinessTableConfig,
+        *,
+        user_id: str,
+        project_id: str | UUID | None,
+        data: dict[str, Any],
+    ) -> dict[str, Any]:
+        values: dict[str, Any] = {"user_id": user_id}
+        if config.has_project_id:
+            values["project_id"] = _uuid(project_id)
+        values.update(self._prepare_data_values(config, data=data))
+        return values
+
+    def _prepare_update_values(self, config: BusinessTableConfig, *, existing: Any, data: dict[str, Any]) -> dict[str, Any]:
+        values = self._prepare_data_values(config, data=data, existing=existing)
+        values.pop("user_id", None)
+        values.pop("project_id", None)
+        return values
+
+    def _prepare_data_values(
+        self,
+        config: BusinessTableConfig,
+        *,
+        data: dict[str, Any],
+        existing: Any | None = None,
+    ) -> dict[str, Any]:
+        values: dict[str, Any] = {}
+        extras = {key: value for key, value in data.items() if key not in config.columns and key != "project_id"}
+
+        for column in config.columns:
+            if column not in data:
+                continue
+            value = data[column]
+            if column in config.uuid_columns:
+                value = _uuid(value)
+            if column in config.json_columns:
+                value = _json(value)
+            values[column] = value
+
+        if config.payload_column:
+            payload = data.get(config.payload_column)
+            if isinstance(payload, dict):
+                payload_value = payload
+            elif existing is not None:
+                payload_value = _json_value(existing[config.payload_column]) or {}
+            else:
+                payload_value = {}
+            payload_value.update(extras)
+            if payload_value or config.payload_column in data or extras:
+                values[config.payload_column] = _json(payload_value)
+
+        if config.metadata_column and extras:
+            metadata = data.get(config.metadata_column)
+            if isinstance(metadata, dict):
+                metadata_value = metadata
+            elif existing is not None:
+                metadata_value = _json_value(existing[config.metadata_column]) or {}
+            else:
+                metadata_value = {}
+            metadata_value.update(extras)
+            values[config.metadata_column] = _json(metadata_value)
+
+        return values
+
+    async def _find_for_user(self, *, entity_id: UUID, user_id: str) -> tuple[BusinessTableConfig, Any]:
+        pool = await self.pool.pool()
+        for config in BUSINESS_TABLES.values():
+            row = await pool.fetchrow(
+                f"select * from public.{config.table} where id = $1",  # nosec B608
+                entity_id,
+            )
+            if row is None:
+                continue
+            if row["user_id"] != user_id:
+                raise PermissionError("Entity does not belong to this user.")
+            return config, row
+        raise KeyError(str(entity_id))
+
+    def _record(self, config: BusinessTableConfig, row: Any) -> dict[str, Any]:
+        data = {}
+        for column in config.columns:
+            value = row[column]
+            if column in config.json_columns:
+                data[column] = _json_value(value)
+            else:
+                data[column] = _response_value(value)
+
+        return {
+            "id": str(row["id"]),
+            "user_id": row["user_id"],
+            "project_id": str(row["project_id"]) if config.has_project_id and row["project_id"] else None,
+            "entity_type": config.entity_type,
+            "data": data,
+            "created_at": row["created_at"].isoformat() if row["created_at"] else None,
+            "updated_at": row["updated_at"].isoformat() if row["updated_at"] else None,
+        }
 
 
 class PostgresRepositoryBundle(RepositoryBundle):

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle, Clock, Terminal, TrendingUp } from "lucide-react";
 import { getHealth, getMetrics, listSkillRuns, listWorkflowRuns } from "../api";
-import { useI18n } from "../i18n/LanguageContext";
+import { useI18n } from "../i18n/useI18n";
 
 export function Dashboard() {
   const { t } = useI18n();

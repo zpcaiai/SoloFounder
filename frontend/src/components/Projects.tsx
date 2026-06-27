@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { useI18n } from "../i18n/LanguageContext";
+import { useCallback, useEffect, useState } from "react";
+import { useI18n } from "../i18n/useI18n";
 import { listProjects, createProject, updateProject, deleteProject, type Entity } from "../api";
-import { CrudList, Modal, useCrudModal, EntityDataViewer } from "./CrudList";
+import { CrudList, Modal, EntityDataViewer } from "./CrudList";
+import { useCrudModal } from "../hooks/useCrudModal";
 
 export function Projects() {
   const { t } = useI18n();
@@ -10,7 +11,7 @@ export function Projects() {
   const [error, setError] = useState<string | null>(null);
   const modal = useCrudModal<{ name: string; description: string }>({ name: "", description: "" });
 
-  const load = async () => {
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const data = await listProjects();
@@ -21,11 +22,11 @@ export function Projects() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const handleSave = async () => {
     const payload = modal.getPayload();

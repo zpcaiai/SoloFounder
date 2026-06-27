@@ -16,7 +16,7 @@ class RepositoryBundle:
     ai_generations: Any
     workflow_runs: Any
     entities: Any | None = None
-    business: Any | None = None
+    business: Any = None
 
 
 _repository_bundle: RepositoryBundle | None = None

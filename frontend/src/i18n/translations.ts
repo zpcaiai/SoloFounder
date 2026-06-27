@@ -76,7 +76,12 @@ export const translations = {
     apiKeyHint: "Required in production as X-API-Key header.",
     defaultProjectId: "Default project ID",
     saveSettings: "Save settings",
-    settingsSaved: "Settings saved. Reload the page to apply changes.",
+    settingsSaved: "Settings saved.",
+    testConnection: "Test connection",
+    connectionOk: "Connection verified.",
+    connectionFailed: "Connection failed",
+    showApiKey: "Show API key",
+    hideApiKey: "Hide API key",
 
     // Business nav
     nav_projects: "Projects",
@@ -290,7 +295,12 @@ export const translations = {
     apiKeyHint: "生产环境下需作为 X-API-Key 请求头发送。",
     defaultProjectId: "默认项目 ID",
     saveSettings: "保存设置",
-    settingsSaved: "设置已保存。请刷新页面以应用更改。",
+    settingsSaved: "设置已保存。",
+    testConnection: "测试连接",
+    connectionOk: "连接验证成功。",
+    connectionFailed: "连接失败",
+    showApiKey: "显示 API Key",
+    hideApiKey: "隐藏 API Key",
 
     // Business nav
     nav_projects: "项目",

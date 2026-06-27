@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { Activity, Cpu, History, Home, Settings, Wrench, FolderKanban, Lightbulb, Users, Tag, FileText, Send, UserSearch, Handshake, FileSignature, Package, DollarSign, LayoutDashboard } from "lucide-react";
 import { settings } from "../api";
-import { useI18n } from "../i18n/LanguageContext";
+import { useI18n } from "../i18n/useI18n";
 import type { TranslationKey } from "../i18n/translations";
 
 const navItems: { to: string; icon: React.ElementType; labelKey: TranslationKey }[] = [

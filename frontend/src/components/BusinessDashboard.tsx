@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle, Clock, TrendingUp, Package, Target, Zap } from "lucide-react";
-import { useI18n } from "../i18n/LanguageContext";
+import { useI18n } from "../i18n/useI18n";
 import { settings, projectDashboard, nextActions } from "../api";
 
 export function BusinessDashboard() {

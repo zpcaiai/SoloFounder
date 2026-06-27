@@ -1,6 +1,6 @@
 import { EntityPage, TextField } from "./EntityPage";
 import { EntityDataViewer } from "./CrudList";
-import { useI18n } from "../i18n/LanguageContext";
+import { useI18n } from "../i18n/useI18n";
 import type { Entity } from "../api";
 
 export function Leads() {
