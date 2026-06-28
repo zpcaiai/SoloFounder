@@ -11,7 +11,12 @@ export function Deals() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionResult, setActionResult] = useState<string | null>(null);
-  const modal = useCrudModal<{ title: string; value: string; stage: string }>({ title: "", value: "", stage: "qualified" });
+  const modal = useCrudModal<{
+    title: string;
+    expected_value: string;
+    stage: string;
+    payload?: Record<string, unknown>;
+  }>({ title: "", expected_value: "", stage: "qualified" });
 
   const load = useCallback(async () => {
     if (!settings.projectId) { setError(t("selectProjectFirst")); setLoading(false); return; }
@@ -24,6 +29,14 @@ export function Deals() {
 
   const handleSave = async () => {
     const payload = modal.getPayload();
+    const title = payload.title;
+    delete payload.title;
+    if (title) {
+      payload.payload = { ...(payload.payload as Record<string, unknown> | undefined), title };
+    }
+    if (payload.expected_value) {
+      payload.expected_value = Number(payload.expected_value);
+    }
     if (modal.editingId) { await updateEntity("deals", modal.editingId, payload); }
     else { await createEntity("deals", payload); }
     modal.close(); await load();
@@ -57,8 +70,14 @@ export function Deals() {
         ]}
         renderRow={(entity) => (
           <div className="space-y-1">
-            <div className="font-medium text-slate-900">{String(entity.data.title || entity.id)}</div>
-            <div className="text-sm text-slate-500">{t("dealValue")}: {String(entity.data.value || "—")}</div>
+            <div className="font-medium text-slate-900">
+              {String(
+                entity.data.payload && typeof entity.data.payload === "object" && "title" in entity.data.payload
+                  ? (entity.data.payload as Record<string, unknown>).title
+                  : entity.id
+              )}
+            </div>
+            <div className="text-sm text-slate-500">{t("dealValue")}: {String(entity.data.expected_value || "—")}</div>
             <div className="text-sm text-slate-500">{t("dealStage")}: {String(entity.data.stage || "—")}</div>
             <EntityDataViewer entity={entity} />
           </div>
@@ -67,8 +86,12 @@ export function Deals() {
       {modal.isOpen && (
         <Modal title={modal.editingId ? t("edit") : t("create")} onClose={modal.close}>
           <div className="space-y-4">
-            <TextField label={t("dealTitle")} value={modal.formData.title} onChange={(v) => modal.setField("title", v)} />
-            <TextField label={t("dealValue")} value={modal.formData.value} onChange={(v) => modal.setField("value", v)} />
+            <TextField
+              label={t("dealTitle")}
+              value={modal.formData.title || String(modal.formData.payload?.title || "")}
+              onChange={(v) => modal.setField("title", v)}
+            />
+            <TextField label={t("dealValue")} value={String(modal.formData.expected_value || "")} onChange={(v) => modal.setField("expected_value", v)} />
             <TextField label={t("dealStage")} value={modal.formData.stage} onChange={(v) => modal.setField("stage", v)} />
             <div className="flex justify-end gap-2">
               <button onClick={modal.close} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg">{t("cancel")}</button>

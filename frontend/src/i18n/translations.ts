@@ -137,6 +137,8 @@ export const translations = {
     generatePersona: "Generate Persona",
     generateInterview: "Generate Interview",
     personaName: "Persona Name",
+    personaRole: "Role",
+    personaBusinessType: "Business Type",
     personaDemographics: "Demographics",
     personaPains: "Pain Points",
     noPersonas: "No personas yet. Generate one with AI!",
@@ -147,6 +149,7 @@ export const translations = {
     generateOutreachKit: "Generate Outreach Kit",
     offerName: "Offer Name",
     offerPrice: "Price",
+    offerTargetCustomer: "Target Customer",
     offerDescription: "Description",
     noOffers: "No offers yet. Convert an idea or create one!",
 
@@ -356,6 +359,8 @@ export const translations = {
     generatePersona: "生成画像",
     generateInterview: "生成访谈",
     personaName: "画像名称",
+    personaRole: "角色",
+    personaBusinessType: "业务类型",
     personaDemographics: "人口统计",
     personaPains: "痛点",
     noPersonas: "暂无画像，用 AI 生成一个吧！",
@@ -366,6 +371,7 @@ export const translations = {
     generateOutreachKit: "生成外联工具包",
     offerName: "报价名称",
     offerPrice: "价格",
+    offerTargetCustomer: "目标客户",
     offerDescription: "描述",
     noOffers: "暂无报价，从创意转换或手动创建吧！",
 

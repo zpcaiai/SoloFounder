@@ -38,6 +38,7 @@ export function CrudList({
   renderRow,
 }: CrudListProps) {
   const { t } = useI18n();
+  const [pendingDelete, setPendingDelete] = useState<Entity | null>(null);
 
   if (loading) return <div className="text-slate-500">{t("loading")}</div>;
   if (error) {
@@ -101,9 +102,7 @@ export function CrudList({
                 )}
                 {onDelete && (
                   <button
-                    onClick={() => {
-                      if (confirm(t("confirmDelete"))) onDelete(entity);
-                    }}
+                    onClick={() => setPendingDelete(entity)}
                     className="p-1.5 text-slate-500 hover:text-red-600"
                     aria-label={t("delete")}
                   >
@@ -114,6 +113,30 @@ export function CrudList({
             </div>
           ))}
         </div>
+      )}
+      {pendingDelete && onDelete && (
+        <Modal title={t("delete")} onClose={() => setPendingDelete(null)}>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-700">{t("confirmDelete")}</p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setPendingDelete(null)}
+                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={() => {
+                  onDelete(pendingDelete);
+                  setPendingDelete(null);
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700"
+              >
+                {t("delete")}
+              </button>
+            </div>
+          </div>
+        </Modal>
       )}
     </div>
   );
