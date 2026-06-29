@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { I18nContext } from "./context";
 import { translations, type Lang, type TranslationKey } from "./translations";
 
@@ -17,6 +17,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, l);
     setLangState(l);
   };
+
+  useEffect(() => {
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    document.title = `${translations[lang].brand} \u00b7 ${translations[lang].headerTitle}`;
+  }, [lang]);
 
   const t = (key: TranslationKey) => translations[lang][key];
 

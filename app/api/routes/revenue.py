@@ -43,7 +43,7 @@ async def get_revenue(
 ) -> dict[str, Any]:
     try:
         return await get_repositories().business.get(entity_id=UUID(revenue_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Revenue record not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your revenue record") from None
@@ -62,7 +62,7 @@ async def update_revenue(
             user_id=user_id,
             data=body.model_dump(exclude_none=True),
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Revenue record not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your revenue record") from None
@@ -77,7 +77,7 @@ async def delete_revenue(
     try:
         await get_repositories().business.delete(entity_id=UUID(revenue_id), user_id=user_id)
         return {"status": "deleted"}
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Revenue record not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your revenue record") from None

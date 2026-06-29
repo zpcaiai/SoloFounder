@@ -44,7 +44,7 @@ async def get_persona(
 ) -> dict[str, Any]:
     try:
         return await get_repositories().business.get(entity_id=UUID(persona_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Persona not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your persona") from None
@@ -63,7 +63,7 @@ async def update_persona(
             user_id=user_id,
             data=body.model_dump(exclude_none=True),
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Persona not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your persona") from None
@@ -78,7 +78,7 @@ async def delete_persona(
     try:
         await get_repositories().business.delete(entity_id=UUID(persona_id), user_id=user_id)
         return {"status": "deleted"}
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Persona not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your persona") from None
@@ -105,7 +105,7 @@ async def generate_interview(
 ) -> dict[str, Any]:
     try:
         persona = await get_repositories().business.get(entity_id=UUID(persona_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Persona not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your persona") from None

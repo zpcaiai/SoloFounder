@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Activity, Cpu, History, Home, Settings, Wrench, FolderKanban, Lightbulb, Users, Tag, FileText, Send, UserSearch, Handshake, FileSignature, Package, DollarSign, LayoutDashboard } from "lucide-react";
-import { settings } from "../api";
+import { getSettingsSnapshot, onSettingsChanged } from "../api";
 import { useI18n } from "../i18n/useI18n";
 import type { TranslationKey } from "../i18n/translations";
 
@@ -26,6 +27,9 @@ const navItems: { to: string; icon: React.ElementType; labelKey: TranslationKey 
 
 export function Layout() {
   const { t, lang, setLang } = useI18n();
+  const [currentSettings, setCurrentSettings] = useState(getSettingsSnapshot);
+
+  useEffect(() => onSettingsChanged(() => setCurrentSettings(getSettingsSnapshot())), []);
 
   return (
     <div className="min-h-screen flex bg-slate-50 text-slate-900">
@@ -53,9 +57,9 @@ export function Layout() {
           ))}
         </nav>
         <div className="p-4 text-xs text-slate-400 border-t border-slate-800">
-          <div className="truncate">{t("user")}: {settings.userId || "—"}</div>
-          <div className="truncate">{t("project")}: {settings.projectId || "—"}</div>
-          <div className="truncate">{t("api")}: {settings.apiBase || t("sameOrigin")}</div>
+          <div className="truncate">{t("user")}: {currentSettings.userId || "—"}</div>
+          <div className="truncate">{t("project")}: {currentSettings.projectId || "—"}</div>
+          <div className="truncate">{t("api")}: {currentSettings.apiBase || t("sameOrigin")}</div>
         </div>
       </aside>
       <main className="flex-1 flex flex-col min-w-0">
@@ -63,7 +67,7 @@ export function Layout() {
           <h1 className="text-lg font-semibold">{t("headerTitle")}</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-500">
-              {settings.apiKey ? t("authenticated") : t("noApiKey")}
+              {currentSettings.apiKey ? t("authenticated") : t("noApiKey")}
             </span>
             <button
               onClick={() => setLang(lang === "en" ? "zh" : "en")}

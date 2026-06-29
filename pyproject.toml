@@ -2,13 +2,14 @@
 name = "solofounder"
 version = "0.1.0"
 description = "RevenuePilot OS Batch 3 AI workflow engine for solo founders."
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
     "anthropic>=0.40",
     "asyncpg>=0.29",
     "fastapi>=0.110",
     "langgraph>=0.2",
     "pydantic>=2",
+    "PyJWT>=2.8",
     "uvicorn[standard]>=0.30",
 ]
 

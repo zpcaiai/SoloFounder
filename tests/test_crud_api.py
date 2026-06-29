@@ -59,6 +59,13 @@ def test_project_user_isolation():
     assert len(list_other.json()) == 0
 
 
+def test_invalid_entity_id_returns_not_found():
+    client = TestClient(create_app())
+    response = client.get("/api/projects/not-a-uuid", headers={"X-User-Id": "user-1"})
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Project not found"
+
+
 def test_idea_crud_and_convert():
     client = TestClient(create_app())
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useI18n } from "../i18n/useI18n";
-import { listProjects, createProject, updateProject, deleteProject, type Entity } from "../api";
+import { listProjects, createProject, updateProject, deleteProject, settings, type Entity } from "../api";
 import { CrudList, Modal, EntityDataViewer } from "./CrudList";
 import { useCrudModal } from "../hooks/useCrudModal";
 
@@ -9,6 +9,8 @@ export function Projects() {
   const [projects, setProjects] = useState<Entity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeProjectId, setActiveProjectId] = useState(settings.projectId);
+  const [notice, setNotice] = useState<string | null>(null);
   const modal = useCrudModal<{ name: string; description: string }>({ name: "", description: "" });
 
   const load = useCallback(async () => {
@@ -41,11 +43,26 @@ export function Projects() {
 
   const handleDelete = async (entity: Entity) => {
     await deleteProject(entity.id);
+    if (activeProjectId === entity.id) {
+      settings.projectId = "";
+      setActiveProjectId("");
+    }
     await load();
   };
 
+  const handleUseProject = (entity: Entity) => {
+    settings.projectId = entity.id;
+    setActiveProjectId(entity.id);
+    setNotice(t("projectSelected"));
+  };
+
   return (
-    <div>
+    <div className="space-y-4">
+      {notice && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {notice}
+        </div>
+      )}
       <CrudList
         title={t("projectsTitle")}
         entities={projects}
@@ -56,10 +73,18 @@ export function Projects() {
         createLabelKey="createProject"
         onEdit={(e) => modal.open(e)}
         onDelete={handleDelete}
+        actions={[{ labelKey: "useProject", onClick: handleUseProject, variant: "secondary" }]}
         renderRow={(entity) => (
           <div className="space-y-1">
-            <div className="font-medium text-slate-900">
-              {String(entity.data.name || entity.id)}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="font-medium text-slate-900">
+                {String(entity.data.name || entity.id)}
+              </div>
+              {activeProjectId === entity.id ? (
+                <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                  {t("currentProject")}
+                </span>
+              ) : null}
             </div>
             {entity.data.description ? (
               <div className="text-sm text-slate-500">{String(entity.data.description)}</div>

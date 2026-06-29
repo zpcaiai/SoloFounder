@@ -4,7 +4,7 @@ import logging
 
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
@@ -128,8 +128,14 @@ def create_app() -> FastAPI:
             ui_html = ui_path.read_text(encoding="utf-8")
 
     if ui_html is not None:
+        # Reserved server-side namespaces must never be shadowed by the SPA
+        # fallback; unknown paths under them return a JSON 404 instead of HTML.
+        _reserved_prefixes = ("api/", "health", "metrics", "docs", "openapi", "redoc")
+
         @app.get("/{path:path}")
         async def spa_catch_all(path: str) -> HTMLResponse:
+            if path == "api" or path.startswith(_reserved_prefixes):
+                raise HTTPException(status_code=404, detail="Not Found")
             return HTMLResponse(content=ui_html)
 
     return app

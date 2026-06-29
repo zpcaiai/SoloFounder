@@ -43,7 +43,7 @@ async def get_landing_page(
 ) -> dict[str, Any]:
     try:
         return await get_repositories().business.get(entity_id=UUID(landing_page_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Landing page not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your landing page") from None
@@ -62,7 +62,7 @@ async def update_landing_page(
             user_id=user_id,
             data=body.model_dump(exclude_none=True),
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Landing page not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your landing page") from None
@@ -77,7 +77,7 @@ async def delete_landing_page(
     try:
         await get_repositories().business.delete(entity_id=UUID(landing_page_id), user_id=user_id)
         return {"status": "deleted"}
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Landing page not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your landing page") from None
@@ -95,7 +95,7 @@ async def publish_landing_page(
             user_id=user_id,
             data={"published": True},
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Landing page not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your landing page") from None
@@ -113,7 +113,7 @@ async def unpublish_landing_page(
             user_id=user_id,
             data={"published": False},
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Landing page not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your landing page") from None

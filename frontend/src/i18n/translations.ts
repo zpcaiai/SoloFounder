@@ -113,7 +113,7 @@ export const translations = {
     data: "Data",
     created: "Created",
     updated: "Updated",
-    selectProjectFirst: "Please select a project in Settings first.",
+    selectProjectFirst: "Please select a project from Projects or Settings first.",
     errorOccurred: "An error occurred",
 
     // Projects
@@ -123,6 +123,9 @@ export const translations = {
     projectDescription: "Description",
     createProject: "Create Project",
     noProjects: "No projects yet. Create one to get started.",
+    useProject: "Use project",
+    currentProject: "Current",
+    projectSelected: "Current project updated.",
 
     // Ideas
     ideasTitle: "Ideas",
@@ -222,6 +225,13 @@ export const translations = {
     openDelivery: "Open Delivery Projects",
     nextActions: "Next Actions",
     noNextActions: "All caught up! No pending actions.",
+
+    // Error boundary
+    errorTitle: "Something went wrong",
+    errorBody: "The console hit an unexpected error. Your data is safe \u2014 reloading usually fixes it.",
+    errorDetails: "Technical details",
+    errorReload: "Reload console",
+    close: "Close",
   },
   zh: {
     // Brand
@@ -335,7 +345,7 @@ export const translations = {
     data: "数据",
     created: "创建时间",
     updated: "更新时间",
-    selectProjectFirst: "请先在设置中选择一个项目。",
+    selectProjectFirst: "请先在项目页或设置中选择一个项目。",
     errorOccurred: "发生错误",
 
     // Projects
@@ -345,6 +355,9 @@ export const translations = {
     projectDescription: "描述",
     createProject: "创建项目",
     noProjects: "暂无项目，创建一个开始吧。",
+    useProject: "设为当前项目",
+    currentProject: "当前",
+    projectSelected: "当前项目已更新。",
 
     // Ideas
     ideasTitle: "创意",
@@ -444,6 +457,13 @@ export const translations = {
     openDelivery: "进行中交付",
     nextActions: "下一步行动",
     noNextActions: "全部搞定！暂无待办事项。",
+
+    // Error boundary
+    errorTitle: "出错了",
+    errorBody: "控制台遇到意外错误。你的数据是安全的——重新加载通常即可恢复。",
+    errorDetails: "技术细节",
+    errorReload: "重新加载控制台",
+    close: "关闭",
   },
 } as const;
 

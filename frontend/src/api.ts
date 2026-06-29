@@ -26,18 +26,35 @@ export type WorkflowRun = {
   created_at: string;
 };
 
+export const SETTINGS_CHANGED_EVENT = "rp_settings_changed";
+
+export type SettingsSnapshot = {
+  apiBase: string;
+  userId: string;
+  apiKey: string;
+  projectId: string;
+};
+
+function emitSettingsChanged() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(SETTINGS_CHANGED_EVENT));
+  }
+}
+
 export const settings = {
   get apiBase() {
     return localStorage.getItem("rp_api_base") || "";
   },
   set apiBase(value: string) {
-    localStorage.setItem("rp_api_base", value);
+    localStorage.setItem("rp_api_base", value.trim());
+    emitSettingsChanged();
   },
   get userId() {
     return localStorage.getItem("rp_user_id") || "";
   },
   set userId(value: string) {
-    localStorage.setItem("rp_user_id", value);
+    localStorage.setItem("rp_user_id", value.trim());
+    emitSettingsChanged();
   },
   get apiKey() {
     const sessionKey = sessionStorage.getItem("rp_api_key");
@@ -54,14 +71,32 @@ export const settings = {
     if (trimmed) sessionStorage.setItem("rp_api_key", trimmed);
     else sessionStorage.removeItem("rp_api_key");
     localStorage.removeItem("rp_api_key");
+    emitSettingsChanged();
   },
   get projectId() {
     return localStorage.getItem("rp_project_id") || "";
   },
   set projectId(value: string) {
-    localStorage.setItem("rp_project_id", value);
+    const trimmed = value.trim();
+    if (trimmed) localStorage.setItem("rp_project_id", trimmed);
+    else localStorage.removeItem("rp_project_id");
+    emitSettingsChanged();
   },
 };
+
+export function getSettingsSnapshot(): SettingsSnapshot {
+  return {
+    apiBase: settings.apiBase,
+    userId: settings.userId,
+    apiKey: settings.apiKey,
+    projectId: settings.projectId,
+  };
+}
+
+export function onSettingsChanged(listener: () => void): () => void {
+  window.addEventListener(SETTINGS_CHANGED_EVENT, listener);
+  return () => window.removeEventListener(SETTINGS_CHANGED_EVENT, listener);
+}
 
 function formatErrorDetail(detail: unknown): string | null {
   if (!detail) return null;

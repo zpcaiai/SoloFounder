@@ -40,7 +40,7 @@ async def list_ideas(project_id: str, user_id: str = Depends(current_user_id)) -
 async def get_idea(project_id: str, idea_id: str, user_id: str = Depends(current_user_id)) -> dict[str, Any]:
     try:
         return await get_repositories().business.get(entity_id=UUID(idea_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Idea not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your idea") from None
@@ -59,7 +59,7 @@ async def update_idea(
             user_id=user_id,
             data=body.model_dump(exclude_none=True),
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Idea not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your idea") from None
@@ -70,7 +70,7 @@ async def delete_idea(project_id: str, idea_id: str, user_id: str = Depends(curr
     try:
         await get_repositories().business.delete(entity_id=UUID(idea_id), user_id=user_id)
         return {"status": "deleted"}
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Idea not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your idea") from None
@@ -97,7 +97,7 @@ async def convert_idea_to_offer(
 ) -> dict[str, Any]:
     try:
         idea = await get_repositories().business.get(entity_id=UUID(idea_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Idea not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your idea") from None

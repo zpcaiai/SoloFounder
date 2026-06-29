@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -63,7 +63,7 @@ class FakePostgresPool:
         for row in self.rows.get(table, []):
             if row["id"] == entity_id and row["user_id"] == user_id:
                 row.update(dict(zip(columns, args[:-2], strict=True)))
-                row["updated_at"] = datetime.now(UTC)
+                row["updated_at"] = datetime.now(timezone.utc)
                 return row
         return None
 
@@ -72,8 +72,8 @@ class FakePostgresPool:
         row: dict[str, Any] = {
             "id": uuid4(),
             "user_id": None,
-            "created_at": datetime.now(UTC),
-            "updated_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
         }
         if config.has_project_id:
             row["project_id"] = None

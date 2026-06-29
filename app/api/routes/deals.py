@@ -40,7 +40,7 @@ async def list_deals(project_id: str, user_id: str = Depends(current_user_id)) -
 async def get_deal(project_id: str, deal_id: str, user_id: str = Depends(current_user_id)) -> dict[str, Any]:
     try:
         return await get_repositories().business.get(entity_id=UUID(deal_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Deal not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your deal") from None
@@ -59,7 +59,7 @@ async def update_deal(
             user_id=user_id,
             data=body.model_dump(exclude_none=True),
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Deal not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your deal") from None
@@ -70,7 +70,7 @@ async def delete_deal(project_id: str, deal_id: str, user_id: str = Depends(curr
     try:
         await get_repositories().business.delete(entity_id=UUID(deal_id), user_id=user_id)
         return {"status": "deleted"}
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Deal not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your deal") from None
@@ -84,7 +84,7 @@ async def mark_deal_won(project_id: str, deal_id: str, user_id: str = Depends(cu
             user_id=user_id,
             data={"stage": "won"},
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Deal not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your deal") from None
@@ -98,7 +98,7 @@ async def mark_deal_lost(project_id: str, deal_id: str, user_id: str = Depends(c
             user_id=user_id,
             data={"stage": "lost"},
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Deal not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your deal") from None
@@ -112,7 +112,7 @@ async def generate_proposal(
 ) -> dict[str, Any]:
     try:
         deal = await get_repositories().business.get(entity_id=UUID(deal_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Deal not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your deal") from None
@@ -135,7 +135,7 @@ async def generate_delivery_project(
 ) -> dict[str, Any]:
     try:
         deal = await get_repositories().business.get(entity_id=UUID(deal_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Deal not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your deal") from None

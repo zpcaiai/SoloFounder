@@ -46,7 +46,7 @@ async def get_delivery_project(
 ) -> dict[str, Any]:
     try:
         return await get_repositories().business.get(entity_id=UUID(delivery_project_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Delivery project not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your delivery project") from None
@@ -65,7 +65,7 @@ async def update_delivery_project(
             user_id=user_id,
             data=body.model_dump(exclude_none=True),
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Delivery project not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your delivery project") from None
@@ -80,7 +80,7 @@ async def delete_delivery_project(
     try:
         await get_repositories().business.delete(entity_id=UUID(delivery_project_id), user_id=user_id)
         return {"status": "deleted"}
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Delivery project not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your delivery project") from None
@@ -130,7 +130,7 @@ async def update_delivery_task(
             user_id=user_id,
             data=body.model_dump(exclude_none=True),
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Task not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your task") from None
@@ -145,7 +145,7 @@ async def delete_delivery_task(
     try:
         await get_repositories().business.delete(entity_id=UUID(task_id), user_id=user_id)
         return {"status": "deleted"}
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Task not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your task") from None

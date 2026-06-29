@@ -30,7 +30,7 @@ async def list_projects(user_id: str = Depends(current_user_id)) -> list[dict[st
 async def get_project(project_id: str, user_id: str = Depends(current_user_id)) -> dict[str, Any]:
     try:
         return await get_repositories().business.get(entity_id=UUID(project_id), user_id=user_id)
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Project not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your project") from None
@@ -48,7 +48,7 @@ async def update_project(
             user_id=user_id,
             data=body.model_dump(exclude_none=True),
         )
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Project not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your project") from None
@@ -59,7 +59,7 @@ async def delete_project(project_id: str, user_id: str = Depends(current_user_id
     try:
         await get_repositories().business.delete(entity_id=UUID(project_id), user_id=user_id)
         return {"status": "deleted"}
-    except KeyError:
+    except (KeyError, ValueError):
         raise HTTPException(status_code=404, detail="Project not found") from None
     except PermissionError:
         raise HTTPException(status_code=403, detail="Not your project") from None
