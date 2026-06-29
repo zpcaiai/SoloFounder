@@ -15,9 +15,29 @@ Implemented:
 
 ## Run Tests
 
+Backend (Python 3.10+):
+
 ```bash
 pytest -q
 ```
+
+Frontend (Vitest + Testing Library):
+
+```bash
+cd frontend
+npm install
+npm test
+```
+
+End-to-end (Playwright, drives the console against the live backend):
+
+```bash
+cd frontend
+npm run e2e:install   # one-time Chromium download
+npm run e2e
+```
+
+CI runs the backend suite, frontend unit tests, and the Playwright E2E smoke test (plus `ruff`, `mypy`, `bandit`, and the frontend build) on every push.
 
 ## Start API
 
@@ -124,7 +144,7 @@ GET /api/workflow-runs
 GET /api/workflow-runs/{workflow_run_id}
 ```
 
-The default AI provider is deterministic so the system runs without an API key. Replace `app.ai.provider.set_ai_provider(...)` with a real provider adapter to call a production LLM.
+The default AI provider is deterministic so the system runs without an API key. Select a real provider with `REVENUEPILOT_AI_PROVIDER` (`deterministic` | `anthropic` | `openai`) and set the matching key (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`); or inject a custom adapter via `app.ai.provider.set_ai_provider(...)`.
 
 ## Production configuration
 
@@ -133,8 +153,10 @@ Copy `.env.example` to `.env` and set the required values. Key knobs:
 - `DATABASE_URL` / `REVENUEPILOT_DB=postgres` for persistence (memory is the default).
 - `DB_POOL_MIN`, `DB_POOL_MAX`, `DB_CONNECT_TIMEOUT` for Postgres connection tuning.
 - `REVENUEPILOT_API_KEY` and `API_KEY_HEADER` for API-key auth.
-- `CORS_ORIGINS` (comma-separated) for CORS allow-list.
-- `RATE_LIMIT_PER_MINUTE` for the per-user in-memory token bucket (default 120).
+- `CORS_ORIGINS` (comma-separated) for the CORS allow-list. A wildcard `*` disables credentialed CORS (per the spec); set explicit origins to allow credentials.
+- `RATE_LIMIT_PER_MINUTE` for the per-user token bucket (default 120).
+- `RATE_LIMIT_BACKEND` (`memory` default, or `redis`) and `REDIS_URL` for a shared limiter across instances.
+- `REVENUEPILOT_AI_PROVIDER` (`deterministic` | `anthropic` | `openai`) plus the matching API key.
 - `REVENUEPILOT_REQUEST_TIMEOUT`, `REVENUEPILOT_MAX_REQUEST_BODY_SIZE` for runtime guards.
 - `REVENUEPILOT_AI_TIMEOUT`, `REVENUEPILOT_AI_MAX_RETRIES` for LLM calls.
 - `REVENUEPILOT_SKIP_DB_MIGRATION=1` to skip startup migrations on read-only replicas.

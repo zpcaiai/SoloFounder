@@ -414,6 +414,10 @@ def _build_provider_from_env() -> AIProvider:
         from app.ai.anthropic_provider import AnthropicProvider
 
         return AnthropicProvider()
+    if name in {"openai", "gpt"}:
+        from app.ai.openai_provider import OpenAIProvider
+
+        return OpenAIProvider()
     return DeterministicRevenuePilotProvider()
 
 

@@ -33,6 +33,8 @@ class Settings(BaseModel):
     supabase_jwt_secret: str | None = Field(default=None)
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
     rate_limit_per_minute: int = Field(default=120)
+    rate_limit_backend: str = Field(default="memory")
+    redis_url: str | None = Field(default=None)
     log_level: str = Field(default="INFO")
     log_format: str = Field(default="text")
     request_timeout: float = Field(default=30.0)
@@ -46,6 +48,16 @@ class Settings(BaseModel):
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
+
+    @property
+    def allow_credentials(self) -> bool:
+        # The CORS spec forbids credentials with a wildcard origin; browsers
+        # reject `Access-Control-Allow-Origin: *` on credentialed requests.
+        return "*" not in self.cors_origins
+
+    @property
+    def use_redis_rate_limit(self) -> bool:
+        return self.rate_limit_backend == "redis" and bool(self.redis_url)
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -130,6 +142,8 @@ def get_settings() -> Settings:
         rate_limit_per_minute=_int_env(
             env.get("RATE_LIMIT_PER_MINUTE"), env.get("REVENUEPILOT_RATE_LIMIT_PER_MINUTE"), default=120
         ),
+        rate_limit_backend=(env.get("RATE_LIMIT_BACKEND") or "memory").strip().lower(),
+        redis_url=env.get("REDIS_URL") or env.get("RATE_LIMIT_REDIS_URL"),
         log_level=env.get("LOG_LEVEL", "INFO"),
         log_format=env.get("LOG_FORMAT") or env.get("REVENUEPILOT_LOG_FORMAT", "text"),
         request_timeout=_float_env(

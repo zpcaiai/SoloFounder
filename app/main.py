@@ -30,7 +30,7 @@ from app.core.lifespan import lifespan
 from app.core.logging import configure_logging
 from app.core.metrics import MetricsCollector
 from app.core.middleware import RequestContextMiddleware
-from app.core.rate_limiter import RateLimiter
+from app.core.rate_limiter import build_rate_limiter
 from app.repositories.factory import get_repositories
 
 logger = logging.getLogger(__name__)
@@ -44,13 +44,22 @@ def create_app() -> FastAPI:
     metrics_collector = MetricsCollector() if settings.metrics_enabled else None
     app.add_middleware(
         RequestContextMiddleware,
-        rate_limiter=RateLimiter(settings.rate_limit_per_minute),
+        rate_limiter=build_rate_limiter(
+            settings.rate_limit_per_minute,
+            backend=settings.rate_limit_backend,
+            redis_url=settings.redis_url,
+        ),
         metrics_collector=metrics_collector,
     )
+    if settings.is_production and not settings.allow_credentials:
+        logger.warning(
+            "CORS is configured with a wildcard origin in production; "
+            "set CORS_ORIGINS to an explicit allow-list to enable credentialed requests."
+        )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
-        allow_credentials=True,
+        allow_credentials=settings.allow_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
     )
